@@ -1,0 +1,194 @@
+@import 'tailwindcss';
+@import '@fontsource/archivo/400.css';
+@import '@fontsource/archivo/600.css';
+@import '@fontsource/archivo/800.css';
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Modernist tokens, mapped into Tailwind v4's @theme. Every value here came
+   from the design system's styles.css; nothing is invented. Tailwind
+   generates utilities from these names: --color-ink gives text-ink,
+   border-ink, bg-ink; --text-hero gives text-hero, and so on.
+   ───────────────────────────────────────────────────────────────────────── */
+@theme {
+  --color-bg: #f3f2f2;
+  --color-surface: #eae9e9;
+  --color-ink: #201e1d;
+  --color-divider: color-mix(in srgb, #201e1d 40%, transparent);
+
+  /* The accent is a slate-teal, NOT the design system's red #ec3013. Red and
+     blue both carry partisan meaning on a ballot, so the accent role is
+     re-pointed to a hue no US party owns. This is an editorial decision —
+     do not "restore" the red. Same ramp structure and lightness steps. */
+  --color-accent: #2f7480;
+  --color-accent-100: #eef5f6;
+  --color-accent-200: #d8e8ea;
+  --color-accent-300: #b5d3d8;
+  --color-accent-400: #86b4bc;
+  --color-accent-500: #52929c;
+  --color-accent-600: #266571;
+  --color-accent-700: #1b4c56; /* accent text at body size — 500/base is only 3:1 here */
+  --color-accent-800: #133840;
+  --color-accent-900: #0e2a31;
+
+  --color-neutral-100: #f8f4f4;
+  --color-neutral-200: #eae7e7;
+  --color-neutral-300: #d7d3d3;
+  --color-neutral-400: #bab6b6;
+  --color-neutral-500: #9b9797;
+  --color-neutral-600: #7d7979;
+  --color-neutral-700: #605d5d;
+  --color-neutral-800: #444141;
+  --color-neutral-900: #2d2b2b;
+
+  /* Party color appears ONLY on hover, ONLY as a bottom rule, and ONLY
+     alongside the visible DEM/REP/NPA text, so color is never the sole
+     carrier of meaning. Never use these as a fill or a badge. */
+  --color-party-rep: #b02a1f;
+  --color-party-dem: #1c4e9e;
+  --color-party-other: #6a6664;
+
+  --font-heading: Archivo, system-ui, sans-serif;
+  --font-body: Archivo, system-ui, sans-serif;
+  --font-sans: Archivo, system-ui, sans-serif;
+
+  /* Type scale as measured from the prototype. The clamps are load-bearing:
+     headlines must survive a 320px viewport without breaking mid-word. */
+  --text-hero: clamp(34px, 6.2vw, 60px);
+  --text-hero--line-height: 1.03;
+  --text-hero--letter-spacing: -0.03em;
+  --text-title: clamp(28px, 5vw, 52px);
+  --text-title--line-height: 1.03;
+  --text-title--letter-spacing: -0.03em;
+  --text-section: 26px;
+  --text-section--line-height: 1.15;
+  --text-section--letter-spacing: -0.02em;
+  --text-stat: 30px;
+  --text-stat--line-height: 1;
+  --text-stat--letter-spacing: -0.02em;
+  --text-card: 22px;
+  --text-card--line-height: 1.2;
+  --text-card--letter-spacing: -0.02em;
+  --text-name: 20px;
+  --text-name--line-height: 1.2;
+  --text-name--letter-spacing: -0.02em;
+  --text-date: clamp(26px, 2.4vw, 32px);
+  --text-date--line-height: 1.1;
+  --text-date--letter-spacing: -0.02em;
+  --text-body: 16px;
+  --text-body--line-height: 1.6;
+  --text-dense: 15px;
+  --text-dense--line-height: 1.5;
+  --text-value: 14px;
+  --text-value--line-height: 1.5;
+  --text-meta: 13px;
+  --text-meta--line-height: 1.4;
+  --text-label: 12px;
+  --text-label--line-height: 1.35;
+  --text-label--letter-spacing: 0.01em;
+  --text-micro: 11px;
+  --text-micro--line-height: 1.3;
+  --text-micro--letter-spacing: 0.04em;
+
+  --spacing: 4px;
+
+  /* Zero radius everywhere, on purpose. Zeroing these makes any stray
+     rounded-* utility a no-op — but the rule is simply: don't use them. */
+  --radius-none: 0px;
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-full: 0px;
+
+  --container-page: 1360px;
+}
+
+@layer base {
+  body {
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    margin: 0;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    margin: 0;
+  }
+  p { text-wrap: pretty; }
+
+  a {
+    color: var(--color-accent-700);
+    text-decoration: none;
+  }
+  a:hover {
+    color: var(--color-accent);
+    text-decoration: underline;
+  }
+
+  /* Themed focus, never the browser default blue. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--color-accent-200);
+    color: var(--color-accent-900);
+  }
+
+  input, select, button { font-family: var(--font-body); }
+  select { appearance: none; }
+}
+
+@layer components {
+  /* Party rule on hover — see the @theme note. Text always carries the
+     meaning; this is a secondary cue only. */
+  .p-rep, .p-dem, .p-oth { transition: border-color .12s, box-shadow .12s; }
+  .p-rep:hover { border-color: var(--color-party-rep); box-shadow: inset 0 -3px 0 var(--color-party-rep); }
+  .p-dem:hover { border-color: var(--color-party-dem); box-shadow: inset 0 -3px 0 var(--color-party-dem); }
+  .p-oth:hover { border-color: var(--color-party-other); box-shadow: inset 0 -3px 0 var(--color-party-other); }
+
+  /* Photographs print in pure black and white. Never tint imagery. */
+  .grayscale-print { filter: grayscale(1) contrast(1.08); }
+
+  /* The page measure. */
+  .shell {
+    max-width: var(--container-page);
+    margin-inline: auto;
+    padding-inline: clamp(16px, 4vw, 32px);
+  }
+
+  /* A strong 2px rule between major sections — never softened to a hairline. */
+  .rule { border-top: 2px solid var(--color-divider); }
+
+  /* Filter chip. Selected state is an accent fill; unselected is ink on ground. */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    border: 2px solid var(--color-ink);
+    padding: 7px 11px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+    background: transparent;
+    color: var(--color-ink);
+    cursor: pointer;
+  }
+  .chip:hover { background: var(--color-accent-100); }
+  .chip[aria-pressed='true'] {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #fff;
+  }
+
+  /* Compare table cells size type off their own column, not the viewport.
+     vw units don't know a column got narrow and will break names mid-word.
+     An element can't query itself, so the clamped text needs an inner span. */
+  .cmp-cell { container-type: inline-size; min-width: 0; }
+  .cmp-name { font-size: clamp(14px, 11cqw, 22px); line-height: 1.15; letter-spacing: -0.02em; }
+  .cmp-value { font-size: clamp(12px, 4.6cqw, 15px); line-height: 1.5; }
+}

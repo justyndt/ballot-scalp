@@ -1,0 +1,46 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import CandidateChip from './CandidateChip.astro';
+import { sortCandidates, formatShort, orElse, NOT_PUBLISHED } from '../lib/derive';
+
+interface Props { race: CollectionEntry<'races'> }
+const { race } = Astro.props;
+const r = race.data;
+const candidates = sortCandidates(r.candidates);   // alphabetical, always
+const count = candidates.length;
+---
+<article
+  class="py-7"
+  data-race
+  data-county={r.county}
+  data-counties={r.counties.join('|')}
+  data-level={r.level}
+  data-parties={[...new Set(candidates.map((c) => c.party ?? 'Not stated'))].join('|')}
+  data-date={r.electionDate}
+  data-district={r.districtNumber ?? ''}
+  data-search={[r.office, r.seat, r.jurisdiction, r.county, r.level, r.heldBy.name,
+                ...candidates.flatMap((c) => [c.name, c.party ?? ''])].join(' ').toLowerCase()}
+>
+  <div class="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2">
+    <h3 class="max-w-[24ch] text-card">
+      <a href={`/race/${race.id}`} class="text-ink no-underline hover:text-accent">{r.office}</a>
+    </h3>
+    <div>
+      <div class="text-label text-neutral-700">Currently held by</div>
+      <div class="text-meta font-semibold">{orElse(r.heldBy.name, NOT_PUBLISHED)}</div>
+    </div>
+  </div>
+
+  <div class="mt-1 text-meta text-neutral-700">{r.seat} · {r.jurisdiction}</div>
+
+  <div class="mt-3.5 flex flex-wrap items-center gap-3">
+    <span class="border-2 border-ink px-2.5 py-1 text-label font-semibold">
+      {count} {count === 1 ? 'candidate' : 'candidates'}
+    </span>
+    <span class="text-label text-neutral-700">{formatShort(r.electionDate)} election</span>
+  </div>
+
+  <div class="mt-3.5 flex flex-wrap gap-2.5">
+    {candidates.map((c) => <CandidateChip candidate={c} />)}
+  </div>
+</article>

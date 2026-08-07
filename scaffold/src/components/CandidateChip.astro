@@ -1,0 +1,16 @@
+---
+import type { Candidate } from '../content.config';
+import { partyAbbr, partyRuleClass, initials } from '../lib/derive';
+
+interface Props { candidate: Candidate }
+const { candidate: c } = Astro.props;
+---
+<span class={`inline-flex items-center gap-2.5 border-2 border-ink px-2.5 py-[7px] ${partyRuleClass(c.party)}`}>
+  <span
+    class="grid size-[26px] place-items-center bg-surface text-micro font-extrabold"
+    aria-hidden="true"
+  >{initials(c.name)}</span>
+  <span class="text-meta font-semibold">{c.name}</span>
+  <!-- Party as text, never as a colored fill. -->
+  <span class="text-micro text-neutral-700">{partyAbbr(c.party)}</span>
+</span>

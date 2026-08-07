@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="_ds/modernist-6ee04ca8-7c26-492a-99e2-ce94281ff2e8/styles.css">
+<script src="_ds/modernist-6ee04ca8-7c26-492a-99e2-ce94281ff2e8/_ds_bundle.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  /* No party colors. Red and blue both carry meaning on a ballot, so the
+     accent role is re-pointed to a slate-teal that no US party owns.
+     Same ramp structure and lightness steps as the design system's. */
+  html:root, :root {
+    --color-accent: #2f7480 !important;
+    --color-accent-100: #eef5f6 !important;
+    --color-accent-200: #d8e8ea !important;
+    --color-accent-300: #b5d3d8 !important;
+    --color-accent-400: #86b4bc !important;
+    --color-accent-500: #52929c !important;
+    --color-accent-600: #266571 !important;
+    --color-accent-700: #1b4c56 !important;
+    --color-accent-800: #133840 !important;
+    --color-accent-900: #0e2a31 !important;
+    --color-accent-2: #2f7480 !important;
+    --color-accent-2-100: #eef5f6 !important;
+    --color-accent-2-200: #d8e8ea !important;
+    --color-accent-2-300: #b5d3d8 !important;
+    --color-accent-2-400: #86b4bc !important;
+    --color-accent-2-500: #52929c !important;
+    --color-accent-2-600: #266571 !important;
+    --color-accent-2-700: #1b4c56 !important;
+    --color-accent-2-800: #133840 !important;
+    --color-accent-2-900: #0e2a31 !important;
+  }
+  body { margin: 0; background: var(--color-bg); }
+  /* Party colour appears only on hover, and only ever alongside the visible
+     DEM/REP/NPA text, so colour is never the sole carrier of meaning. */
+  .p-rep, .p-dem, .p-oth { transition: border-color .12s, box-shadow .12s; }
+  .p-rep:hover { border-color: #b02a1f; box-shadow: inset 0 -3px 0 #b02a1f; }
+  .p-dem:hover { border-color: #1c4e9e; box-shadow: inset 0 -3px 0 #1c4e9e; }
+  .p-oth:hover { border-color: #6a6664; box-shadow: inset 0 -3px 0 #6a6664; }
+  .pc-rep:hover { border-color: #b02a1f; box-shadow: inset 0 -5px 0 #b02a1f; }
+  .pc-dem:hover { border-color: #1c4e9e; box-shadow: inset 0 -5px 0 #1c4e9e; }
+  .pc-oth:hover { border-color: #6a6664; box-shadow: inset 0 -5px 0 #6a6664; }
+  a { color: var(--color-accent-700); text-decoration: none; }
+  a:hover { color: var(--color-accent); text-decoration: underline; }
+  input, select, button { font-family: var(--font-body); }
+  select { appearance: none; }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);padding-bottom:80px">
+
+  <a href="#main-content" style="position:absolute;left:-9999px;top:0;z-index:60;background:var(--color-text);color:var(--color-bg);padding:12px 18px;font-weight:700;font-size:14px" style-focus="left:8px;top:8px">Skip to content</a>
+
+  <header style="border-bottom:2px solid var(--color-divider);background:var(--color-bg);position:sticky;top:0;z-index:20">
+    <div style="max-width:1360px;margin:0 auto;padding:0 clamp(16px,4vw,32px);display:flex;align-items:stretch;justify-content:space-between;flex-wrap:wrap;gap:0 32px;min-height:64px">
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 0">
+        <div style="width:26px;height:26px;background:var(--color-accent);flex:none"></div>
+        <div style="display:flex;flex-direction:column;gap:1px">
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:16px;letter-spacing:-0.02em;line-height:1">Ballot Record</span>
+          <span style="font-size:11px;letter-spacing:0.01em;color:color-mix(in srgb,var(--color-text) 70%,transparent);line-height:1">{{ scope }}</span>
+        </div>
+      </div>
+      <nav style="display:flex;align-items:stretch;flex-wrap:wrap;gap:0">
+        <sc-for list="{{ nav }}" as="n" hint-placeholder-count="4">
+          <sc-if value="{{ n.on }}" hint-placeholder-val="{{ false }}">
+            <button type="button" onClick="{{ n.go }}" aria-current="page" style="border:0;background:transparent;cursor:pointer;padding:0 16px;font-family:var(--font-heading);font-weight:800;font-size:13px;letter-spacing:0.02em;color:var(--color-accent);border-bottom:3px solid var(--color-accent);display:flex;align-items:center">{{ n.label }}</button>
+          </sc-if>
+          <sc-if value="{{ n.off }}" hint-placeholder-val="{{ true }}">
+            <button type="button" onClick="{{ n.go }}" style="border:0;background:transparent;cursor:pointer;padding:0 16px;font-family:var(--font-heading);font-weight:800;font-size:13px;letter-spacing:0.02em;color:var(--color-text);border-bottom:3px solid transparent;display:flex;align-items:center" style-hover="background:color-mix(in srgb,var(--color-text) 7%,transparent)">{{ n.label }}</button>
+          </sc-if>
+        </sc-for>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ══════════ INDEX ══════════ -->
+  <sc-if value="{{ showIndex }}" hint-placeholder-val="{{ true }}">
+  <main id="main-content">
+    <section style="border-bottom:2px solid var(--color-divider)">
+      <div style="max-width:1360px;margin:0 auto;padding:clamp(32px,6vw,56px) clamp(16px,4vw,32px) 40px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr));gap:40px 64px;align-items:end">
+        <div>
+          <p style="font-size:12px;letter-spacing:0.01em;color:var(--color-accent-700);margin:0 0 16px;font-weight:600">{{ kicker }}</p>
+          <h1 style="font-size:clamp(34px,6.2vw,60px);line-height:1.02;letter-spacing:-0.03em;margin:0 0 20px;max-width:16ch">Everyone on your ballot. Nothing else.</h1>
+          <p style="font-size:17px;line-height:1.5;max-width:52ch;margin:0;text-wrap:pretty">{{ intro }}</p>
+        </div>
+        <div style="border-top:2px solid var(--color-divider);padding-top:20px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 24px">
+            <div style="padding-bottom:16px">
+              <div style="font-size:11px;letter-spacing:0.01em;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin-bottom:6px">{{ primaryLabel }}</div>
+              <div style="font-family:var(--font-heading);font-weight:800;font-size:26px;line-height:1;letter-spacing:-0.02em">{{ primaryShort }}</div>
+              <div style="font-size:13px;color:var(--color-accent-700);margin-top:5px;font-weight:600">{{ daysToPrimary }}</div>
+            </div>
+            <div style="padding-bottom:16px">
+              <div style="font-size:11px;letter-spacing:0.01em;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin-bottom:6px">{{ generalLabel }}</div>
+              <div style="font-family:var(--font-heading);font-weight:800;font-size:26px;line-height:1;letter-spacing:-0.02em">{{ generalShort }}</div>
+              <div style="font-size:13px;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin-top:5px">{{ generalNote }}</div>
+            </div>
+            <div style="border-top:1px solid var(--color-divider);padding-top:14px">
+              <div style="font-size:11px;letter-spacing:0.01em;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin-bottom:4px">{{ earlyLabel }}</div>
+              <div style="font-size:14px;font-weight:600">{{ earlyShort }}</div>
+            </div>
+            <div style="border-top:1px solid var(--color-divider);padding-top:14px">
+              <div style="font-size:11px;letter-spacing:0.01em;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin-bottom:4px">On this page</div>
+              <div style="font-size:14px;font-weight:600">{{ totalLine }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div style="max-width:1360px;margin:0 auto;padding:0 clamp(16px,4vw,32px)">
+      <div style="display:flex;flex-wrap:wrap;gap:0">
+
+        <aside style="border-right:2px solid var(--color-divider);padding:28px 28px 40px 0;flex:1 1 236px;min-width:0">
+          <div style="position:sticky;top:96px;display:flex;flex-direction:column;gap:26px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+              <h2 style="font-size:12px;letter-spacing:0.01em;margin:0">Filter</h2>
+              <sc-if value="{{ anyFilter }}" hint-placeholder-val="{{ false }}">
+                <button type="button" onClick="{{ clearFilters }}" style="border:0;background:transparent;cursor:pointer;padding:0;font-size:12px;font-weight:600;color:var(--color-accent-700);text-decoration:underline;text-underline-offset:3px">Clear all</button>
+              </sc-if>
+            </div>
+            <sc-for list="{{ filterGroups }}" as="g" hint-placeholder-count="5">
+              <div style="display:flex;flex-direction:column;gap:9px">
+                <div style="font-size:11px;letter-spacing:0.01em;color:color-mix(in srgb,var(--color-text) 70%,transparent)">{{ g.label }}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px">
+                  <sc-for list="{{ g.opts }}" as="o" hint-placeholder-count="3">
+                    <sc-if value="{{ o.on }}" hint-placeholder-val="{{ false }}">
+                      <button type="button" onClick="{{ o.toggle }}" aria-pressed="true" style="cursor:pointer;font-size:12px;font-weight:600;line-height:1.2;padding:8px 11px;border:1px solid var(--color-accent);background:var(--color-accent);color:var(--color-bg);text-align:left">{{ o.label }}</button>
+                    </sc-if>
+                    <sc-if value="{{ o.off }}" hint-placeholder-val="{{ true }}">
+                      <button type="button" onClick="{{ o.toggle }}" aria-pressed="false" style="cursor:pointer;font-size:12px;font-weight:500;line-height:1.2;padding:8px 11px;border:1px solid var(--color-divider);background:transparent;color:var(--color-text);text-align:left" style-hover="background:color-mix(in srgb,var(--color-text) 8%,transparent)">{{ o.label }}</button>
+                    </sc-if>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+            <div style="border-top:2px solid var(--color-divider);padding-top:16px">
+              <p style="font-size:12px;line-height:1.5;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin:0">Candidates are listed alphabetically by last name in every race, always.</p>
+            </div>
+          </div>
+        </aside>
+
+        <div style="padding:28px 0 40px clamp(16px,3vw,32px);min-width:0;flex:999 1 440px">
+          <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px">
+            <div style="flex:1;min-width:0;position:relative;display:flex;align-items:center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="position:absolute;left:14px;pointer-events:none;color:color-mix(in srgb,var(--color-text) 55%,transparent)"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+              <input type="search" class="input" value="{{ q }}" onChange="{{ setQ }}" aria-label="Search races and candidates" placeholder="Search a name, an office, a district…" style="width:100%;min-height:48px;font-size:16px;border:2px solid var(--color-text);background:transparent;padding:8px 14px 8px 42px" />
+            </div>
+          </div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:14px 0 16px;border-bottom:2px solid var(--color-divider)">
+            <div role="status" aria-live="polite" style="font-size:13px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">{{ resultLine }}</div>
+            <div style="font-size:12px;letter-spacing:0.01em;color:color-mix(in srgb,var(--color-text) 70%,transparent)">Verified {{ verifiedOn }}</div>
+          </div>
+
+          <sc-for list="{{ groups }}" as="grp" hint-placeholder-count="3">
+            <section>
+              <h3 style="font-size:12px;letter-spacing:0.01em;margin:32px 0 0;padding-bottom:10px;color:var(--color-accent-700)">{{ grp.label }}</h3>
+              <sc-for list="{{ grp.races }}" as="r" hint-placeholder-count="4">
+                <button type="button" onClick="{{ r.open }}" style="display:block;width:100%;text-align:left;border:0;border-top:1px solid var(--color-divider);background:transparent;cursor:pointer;padding:20px 0;font:inherit;color:inherit" style-hover="background:color-mix(in srgb,var(--color-text) 4%,transparent)">
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr));gap:18px 28px;align-items:start">
+                    <div style="min-width:0">
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-bottom:6px">
+                        <span style="font-family:var(--font-heading);font-weight:800;font-size:20px;letter-spacing:-0.02em;line-height:1.2">{{ r.office }}</span>
+                        <sc-if value="{{ r.numberedSeat }}" hint-placeholder-val="{{ false }}">
+                          <span style="display:inline-flex;align-items:baseline;gap:5px;border:1px solid var(--color-text);padding:2px 8px;white-space:nowrap;line-height:1.3">
+                            <span style="font-size:11px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">{{ r.seatWord }}</span>
+                            <span style="font-family:var(--font-heading);font-weight:800;font-size:15px;letter-spacing:-0.01em">{{ r.seatNum }}</span>
+                          </span>
+                        </sc-if>
+                        <sc-if value="{{ r.plainSeat }}" hint-placeholder-val="{{ false }}">
+                          <span style="display:inline-flex;align-items:center;border:1px solid var(--color-text);padding:3px 8px;white-space:nowrap;line-height:1.3;font-size:11px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">{{ r.seatLabelText }}</span>
+                        </sc-if>
+                      </div>
+                      <div style="font-size:13px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">{{ r.jurisdiction }}</div>
+                    </div>
+                    <div style="min-width:0">
+                      <div style="font-size:11px;letter-spacing:0.01em;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin-bottom:4px">Currently held by</div>
+                      <div style="font-size:14px;font-weight:600;line-height:1.3">{{ r.heldByName }}</div>
+                      <sc-if value="{{ r.heldByNote }}" hint-placeholder-val="{{ false }}">
+                        <div style="font-size:12px;color:var(--color-accent-700);margin-top:3px;line-height:1.35">{{ r.heldByNote }}</div>
+                      </sc-if>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:flex-start;gap:7px">
+                      <span style="font-size:11px;font-weight:700;letter-spacing:0.01em;padding:4px 8px;border:1px solid var(--color-divider)">{{ r.statusLabel }}</span>
+                      <span style="font-size:12px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">{{ r.dateLabel }}</span>
+                    </div>
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px">
+                    <sc-for list="{{ r.chips }}" as="c" hint-placeholder-count="3">
+                      <span class="{{ c.partyClass }}" style="display:inline-flex;align-items:center;gap:8px;border:1px solid var(--color-divider);padding:4px 10px 4px 4px;background:var(--color-bg)">
+                        <sc-if value="{{ c.hasPhoto }}" hint-placeholder-val="{{ false }}">
+                          <span aria-hidden="true" class="grayscale" style="width:26px;height:26px;display:block;flex:none;background-image:url({{ c.photo }});background-size:cover;background-position:center;background-color:color-mix(in srgb,var(--color-text) 10%,transparent)"></span>
+                        </sc-if>
+                        <sc-if value="{{ c.noPhoto }}" hint-placeholder-val="{{ true }}">
+                          <span aria-hidden="true" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--color-text) 12%,transparent);font-size:10px;font-weight:800;flex:none">{{ c.initials }}</span>
+                        </sc-if>
+                        <span style="font-size:13px;font-weight:600;white-space:nowrap">{{ c.name }}</span>
+                        <span style="font-size:11px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap">{{ c.partyShort }}</span>
+                      </span>
+                    </sc-for>
+                    <sc-if value="{{ r.empty }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-size:13px;color:color-mix(in srgb,var(--color-text) 70%,transparent);font-style:italic">{{ r.emptyLabel }}</span>
+                    </sc-if>
+                  </div>
+                </button>
+              </sc-for>
+            </section>
+          </sc-for>
+
+          <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+            <div style="border-top:1px solid var(--color-divider);padding:56px 0;text-align:left">
+              <sc-if value="{{ offCycleHit }}" hint-placeholder-val="{{ false }}">
+                <div style="border-left:3px solid var(--color-accent);padding:2px 0 2px 16px;margin-bottom:28px;max-width:56ch">
+                  <div style="font-family:var(--font-heading);font-weight:800;font-size:22px;margin-bottom:8px;letter-spacing:-0.01em">{{ offCycleHeading }}</div>
+                  <p style="font-size:14px;line-height:1.6;margin:0;text-wrap:pretty">{{ offCycleNote }}</p>
+                </div>
+              </sc-if>
+              <sc-if value="{{ genericEmpty }}" hint-placeholder-val="{{ true }}">
+                <div style="font-family:var(--font-heading);font-weight:800;font-size:22px;margin-bottom:8px">No races match those filters.</div>
+                <p style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);max-width:44ch;margin:0 0 16px">Try clearing a filter, or search for a candidate by last name.</p>
+              </sc-if>
+              <button type="button" class="btn btn-secondary" onClick="{{ clearFilters }}">Clear all filters</button>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </main>
+  </sc-if>
+
+  <!-- ══════════ RACE DETAIL ══════════ -->
+  <sc-if value="{{ showRace }}" hint-placeholder-val="{{ false }}">
+  <main id="main-content" style="max-width:1360px;margin:0 auto;padding:0 clamp(16px,4vw,32px)">
+    <div style="padding:20px 0 0">
+      <button type="button" onClick="{{ goIndex }}" style="border:0;background:transparent;cursor:pointer;padding:0;font-size:13px;font-weight:600;color:var(--color-accent-700);text-decoration:underline;text-underline-offset:3px">← All races</button>
+    </div>
+    <header style="padding:14px 0 24px;border-bottom:2px solid var(--color-divider)">
+      <div style="font-size:12px;letter-spacing:0.01em;color:var(--color-accent-700);margin-bottom:10px">{{ race.breadcrumb }}</div>
+      <h1 style="font-size:clamp(28px,5vw,52px);line-height:1.03;letter-spacing:-0.03em;margin:0;max-width:22ch;text-wrap:pretty">{{ race.office }}</h1>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:14px">
+        <sc-if value="{{ race.numberedSeat }}" hint-placeholder-val="{{ false }}">
+          <span style="display:inline-flex;align-items:baseline;gap:8px;border:2px solid var(--color-text);padding:5px 12px;white-space:nowrap">
+            <span style="font-size:13px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">{{ race.seatWord }}</span>
+            <span style="font-family:var(--font-heading);font-weight:800;font-size:20px;letter-spacing:-0.02em;line-height:1">{{ race.seatNum }}</span>
+          </span>
+        </sc-if>
+        <sc-if value="{{ race.plainSeat }}" hint-placeholder-val="{{ false }}">
+          <span style="display:inline-flex;align-items:center;border:2px solid var(--color-text);padding:6px 12px;white-space:nowrap;font-size:13px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">{{ race.seatLabelText }}</span>
+        </sc-if>
+        <span style="font-size:16px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">{{ race.jurisdiction }}</span>
+      </div>
+    </header>
+
+    <div style="overflow:hidden;border-bottom:2px solid var(--color-divider)">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(158px,100%),1fr));gap:0;margin:-1px 0 0 -26px;width:calc(100% + 27px)">
+        <sc-for list="{{ race.facts }}" as="f" hint-placeholder-count="4">
+          <div style="padding:18px 26px 20px;border-top:1px solid var(--color-divider);box-shadow:1px 0 0 0 var(--color-divider);min-width:0">
+            <div style="font-size:11px;letter-spacing:0.01em;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin-bottom:7px">{{ f.label }}</div>
+            <div style="font-family:var(--font-heading);font-weight:800;font-size:17px;letter-spacing:-0.01em;line-height:1.25;text-wrap:pretty">{{ f.value }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:32px 48px;padding:28px 0 0;align-items:flex-start">
+      <div style="min-width:0;flex:999 1 420px">
+        <div style="background:var(--color-accent-100);border-left:3px solid var(--color-accent);padding:16px 20px;margin-bottom:32px">
+          <div style="font-size:11px;letter-spacing:0.01em;color:var(--color-accent-700);margin-bottom:6px">How this seat is decided</div>
+          <p style="font-size:15px;line-height:1.5;margin:0;color:var(--color-accent-900);text-wrap:pretty">{{ race.ballotNote }}</p>
+        </div>
+
+        <h2 style="font-size:12px;letter-spacing:0.01em;margin:0 0 4px">{{ race.candidateHeading }}</h2>
+        <p style="font-size:13px;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin:0 0 20px">Listed alphabetically by last name.</p>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:24px">
+          <sc-for list="{{ race.cands }}" as="c" hint-placeholder-count="3">
+            <article class="{{ c.partyClass }}" style="border:2px solid var(--color-text);background:var(--color-bg);display:flex;flex-direction:column">
+              <div style="display:flex;gap:0;border-bottom:1px solid var(--color-divider)">
+                <sc-if value="{{ c.hasPhoto }}" hint-placeholder-val="{{ false }}">
+                  <span aria-hidden="true" class="grayscale" style="width:96px;height:96px;display:block;flex:none;border-right:1px solid var(--color-divider);background-image:url({{ c.photo }});background-size:cover;background-position:center;background-color:color-mix(in srgb,var(--color-text) 10%,transparent)"></span>
+                </sc-if>
+                <sc-if value="{{ c.noPhoto }}" hint-placeholder-val="{{ true }}">
+                  <span aria-hidden="true" style="width:96px;height:96px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--color-text) 12%,transparent);font-family:var(--font-heading);font-size:26px;font-weight:800;flex:none;border-right:1px solid var(--color-divider)">{{ c.initials }}</span>
+                </sc-if>
+                <div style="padding:12px 14px;display:flex;flex-direction:column;justify-content:center;gap:6px;min-width:0">
+                  <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;letter-spacing:-0.02em;line-height:1.15">{{ c.name }}</div>
+                  <sc-if value="{{ c.hasRunningMate }}" hint-placeholder-val="{{ false }}">
+                    <div style="font-size:12px;line-height:1.4;color:color-mix(in srgb,var(--color-text) 70%,transparent);overflow-wrap:break-word">Running mate: {{ c.runningMate }}</div>
+                  </sc-if>
+                  <div style="display:flex;flex-wrap:wrap;gap:5px">
+                    <span style="font-size:11px;font-weight:600;letter-spacing:0.04em;padding:3px 7px;border:1px solid var(--color-divider);white-space:nowrap">{{ c.party }}</span>
+                    <sc-if value="{{ c.incumbent }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-size:11px;font-weight:700;letter-spacing:0.04em;padding:3px 7px;border:1px solid var(--color-accent);color:var(--color-accent-700);white-space:nowrap">Incumbent</span>
+                    </sc-if>
+                    <sc-if value="{{ c.writeIn }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-size:11px;font-weight:700;letter-spacing:0.04em;padding:3px 7px;border:1px solid var(--color-divider);white-space:nowrap">Write-in</span>
+                    </sc-if>
+                  </div>
+                </div>
+              </div>
+
+              <div style="padding:14px;flex:1">
+                <div style="font-size:11px;letter-spacing:0.01em;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin-bottom:10px">Proof of candidacy</div>
+                <dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:7px 14px;font-size:13px">
+                  <sc-for list="{{ c.proof }}" as="p" hint-placeholder-count="4">
+                    <dt style="color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap">{{ p.label }}</dt>
+                    <dd style="margin:0;font-weight:600;text-align:right">{{ p.value }}</dd>
+                  </sc-for>
+                </dl>
+              </div>
+
+              <div style="border-top:1px solid var(--color-divider);padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+                <sc-if value="{{ c.hasWebsite }}" hint-placeholder-val="{{ false }}">
+                  <a href="{{ c.website }}" target="_blank" rel="noopener" style="font-size:13px;font-weight:600">Campaign <span style="white-space:nowrap">website<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-1px;margin-left:4px"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span></a>
+                </sc-if>
+                <sc-if value="{{ c.noWebsite }}" hint-placeholder-val="{{ true }}">
+                  <span style="font-size:12px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">No campaign website on file</span>
+                </sc-if>
+                <div style="display:flex;flex-wrap:wrap;gap:14px">
+                  <a href="{{ c.recordUrl }}" target="_blank" rel="noopener" style="font-size:13px;font-weight:600">Official <span style="white-space:nowrap">record<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-1px;margin-left:4px"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span></a>
+                  <a href="{{ c.financeUrl }}" target="_blank" rel="noopener" style="font-size:13px;font-weight:600">Finance <span style="white-space:nowrap">reports<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-1px;margin-left:4px"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span></a>
+                </div>
+                <button type="button" onClick="{{ c.addCompare }}" class="btn btn-secondary" style="width:100%;justify-content:flex-start;margin-top:4px"><span style="display:inline-flex;align-items:center;gap:7px"><sc-if value="{{ c.notInCompare }}" hint-placeholder-val="{{ true }}"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg></sc-if><sc-if value="{{ c.inCompare }}" hint-placeholder-val="{{ false }}"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>{{ c.compareLabel }}</span></button>
+              </div>
+            </article>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ race.hasWithdrawn }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:40px;border-top:2px solid var(--color-divider);padding-top:24px">
+            <h2 style="font-size:12px;letter-spacing:0.01em;margin:0 0 4px">{{ race.withdrawnHeading }}</h2>
+            <p style="font-size:13px;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin:0 0 20px;max-width:56ch;text-wrap:pretty">Listed for the record only. These names are not on the ballot and are not counted in the field above.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:24px">
+              <sc-for list="{{ race.withdrawn }}" as="c" hint-placeholder-count="1">
+                <article style="border:1px dashed color-mix(in srgb,var(--color-text) 45%,transparent);background:transparent;display:flex;flex-direction:column;opacity:0.82">
+                  <div style="display:flex;gap:0;border-bottom:1px solid var(--color-divider)">
+                    <span aria-hidden="true" style="width:96px;height:96px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--color-text) 8%,transparent);font-family:var(--font-heading);font-size:26px;font-weight:800;flex:none;border-right:1px solid var(--color-divider);color:color-mix(in srgb,var(--color-text) 70%,transparent)">{{ c.initials }}</span>
+                    <div style="padding:12px 14px;display:flex;flex-direction:column;justify-content:center;gap:6px;min-width:0">
+                      <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;letter-spacing:-0.02em;line-height:1.15">{{ c.name }}</div>
+                      <div style="display:flex;flex-wrap:wrap;gap:5px">
+                        <span style="font-size:11px;font-weight:700;letter-spacing:0.04em;padding:3px 7px;border:1px solid var(--color-text);background:var(--color-text);color:var(--color-bg);white-space:nowrap">{{ c.withdrewLabel }}</span>
+                        <span style="font-size:11px;font-weight:600;letter-spacing:0.04em;padding:3px 7px;border:1px solid var(--color-divider);white-space:nowrap">{{ c.party }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div style="padding:14px;flex:1">
+                    <div style="font-size:11px;letter-spacing:0.01em;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin-bottom:10px">What the record shows</div>
+                    <dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:7px 14px;font-size:13px">
+                      <sc-for list="{{ c.proof }}" as="p" hint-placeholder-count="4">
+                        <dt style="color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap">{{ p.label }}</dt>
+                        <dd style="margin:0;font-weight:600;text-align:right">{{ p.value }}</dd>
+                      </sc-for>
+                    </dl>
+                  </div>
+                  <div style="border-top:1px solid var(--color-divider);padding:12px 14px">
+                    <a href="{{ c.recordUrl }}" target="_blank" rel="noopener" style="font-size:13px;font-weight:600">Official <span style="white-space:nowrap">record<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-1px;margin-left:4px"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span></a>
+                  </div>
+                </article>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ race.empty }}" hint-placeholder-val="{{ false }}">
+          <div style="border:2px solid var(--color-divider);padding:32px;text-align:left">
+            <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:8px">{{ race.emptyTitle }}</div>
+            <p style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin:0 0 16px;max-width:48ch">{{ race.emptyBody }}</p>
+            <a href="{{ race.sourceUrl }}" target="_blank" rel="noopener" style="font-size:14px;font-weight:600">Check the Supervisor of Elections <span style="white-space:nowrap">record<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-1px;margin-left:4px"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span></a>
+          </div>
+        </sc-if>
+      </div>
+
+      <aside style="border:2px solid var(--color-text);padding:22px;flex:1 1 300px">
+        <div style="font-size:11px;letter-spacing:0.01em;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin-bottom:10px">Currently holds this seat</div>
+        <div style="font-family:var(--font-heading);font-weight:800;font-size:24px;letter-spacing:-0.02em;line-height:1.1;margin-bottom:8px">{{ race.heldByName }}</div>
+        <div style="font-size:13px;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin-bottom:14px">{{ race.heldByParty }}</div>
+        <sc-if value="{{ race.heldByNote }}" hint-placeholder-val="{{ false }}">
+          <p style="font-size:13px;line-height:1.5;margin:0 0 14px;padding:10px 12px;background:var(--color-accent-100);color:var(--color-accent-900)">{{ race.heldByNote }}</p>
+        </sc-if>
+        <div style="border-top:1px solid var(--color-divider);padding-top:14px">
+          <div style="font-size:11px;letter-spacing:0.01em;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin-bottom:8px">Source of record</div>
+          <a href="{{ race.sourceUrl }}" target="_blank" rel="noopener" style="font-size:13px;font-weight:600;line-height:1.4;display:block">{{ race.sourceLabel }}<span style="white-space:nowrap"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-1px;margin-left:4px"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span></a>
+          <div style="font-size:12px;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin-top:10px">Checked {{ verifiedOn }}</div>
+        </div>
+      </aside>
+    </div>
+  </main>
+  </sc-if>
+
+  <!-- ══════════ KEY DATES ══════════ -->
+  <sc-if value="{{ showDates }}" hint-placeholder-val="{{ false }}">
+  <main id="main-content" style="max-width:1360px;margin:0 auto;padding:0 clamp(16px,4vw,32px)">
+    <header style="padding:56px 0 32px;border-bottom:2px solid var(--color-divider)">
+      <h1 style="font-size:clamp(28px,5vw,52px);line-height:1.03;letter-spacing:-0.03em;margin:0 0 14px;max-width:18ch">Key dates and how to vote</h1>
+      <p style="font-size:17px;line-height:1.5;max-width:56ch;margin:0;text-wrap:pretty">{{ datesIntro }}</p>
+    </header>
+
+    <section style="padding:36px 0 44px;border-bottom:2px solid var(--color-divider)">
+      <h2 style="font-size:12px;letter-spacing:0.01em;margin:0 0 18px">The sequence</h2>
+      <div style="overflow:hidden">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));width:calc(100% + 48px);margin-left:-24px">
+          <sc-for list="{{ dates }}" as="d" hint-placeholder-count="5">
+            <div style="padding:0 0 4px;display:flex;flex-direction:column">
+              <div style="height:8px;background:{{ d.barBg }}"></div>
+              <div style="padding:30px 24px 0;display:flex;flex-direction:column;flex:1">
+                <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:12px;min-height:17px">
+                  <span style="font-size:11px;letter-spacing:0.01em;font-weight:600;color:{{ d.statusColor }}">{{ d.status }}</span>
+                </div>
+                <div style="font-family:var(--font-heading);font-weight:800;font-size:clamp(26px,2.4vw,32px);line-height:1;letter-spacing:-0.025em;color:{{ d.dateColor }};margin-bottom:6px">{{ d.date }}</div>
+                <div style="font-size:13px;font-weight:600;line-height:1.3;color:{{ d.labelColor }};margin-bottom:12px">{{ d.label }}</div>
+                <p style="font-size:14px;line-height:1.5;margin:0;color:{{ d.bodyColor }};text-wrap:pretty;max-width:30ch">{{ d.body }}</p>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:44px 56px;padding:44px 0">
+      <div>
+        <h2 style="font-size:12px;letter-spacing:0.01em;margin:0 0 20px">{{ explainerHeading }}</h2>
+        <sc-for list="{{ explainerParas }}" as="p" hint-placeholder-count="3">
+          <p style="font-size:16px;line-height:1.6;margin:0 0 14px;text-wrap:pretty">{{ p.text }}</p>
+        </sc-for>
+      </div>
+      <div>
+        <h2 style="font-size:12px;letter-spacing:0.01em;margin:0 0 20px">Your elections office</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:28px">
+          <sc-for list="{{ offices }}" as="o" hint-placeholder-count="2">
+            <div style="border-top:2px solid var(--color-divider);padding-top:16px">
+              <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;letter-spacing:-0.02em;margin-bottom:4px">{{ o.county }}</div>
+              <div style="font-size:13px;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin-bottom:12px;line-height:1.45">{{ o.supervisor }}</div>
+              <div style="font-size:13px;line-height:1.6;margin-bottom:10px">{{ o.address }}</div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:10px">{{ o.phone }}</div>
+              <a href="{{ o.url }}" target="_blank" rel="noopener" style="font-size:13px;font-weight:600">{{ o.domain }}<span style="white-space:nowrap"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-1px;margin-left:4px"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span></a>
+            </div>
+          </sc-for>
+        </div>
+        <div style="border-top:2px solid var(--color-divider);margin-top:32px;padding-top:16px">
+          <h3 style="font-size:12px;letter-spacing:0.01em;margin:0 0 10px">Not on the 2026 ballot</h3>
+          <p style="font-size:14px;line-height:1.55;margin:0 0 12px;color:color-mix(in srgb,var(--color-text) 70%,transparent);text-wrap:pretty">{{ notUpNote }}</p>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <sc-for list="{{ notUpOffices }}" as="o" hint-placeholder-count="4">
+              <span style="font-size:12px;padding:4px 9px;border:1px solid var(--color-divider);color:color-mix(in srgb,var(--color-text) 70%,transparent)">{{ o.label }}</span>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  </sc-if>
+
+  <!-- ══════════ COMPARE ══════════ -->
+  <sc-if value="{{ showCompare }}" hint-placeholder-val="{{ false }}">
+  <main id="main-content" style="max-width:1360px;margin:0 auto;padding:0 clamp(16px,4vw,32px)">
+    <header style="padding:56px 0 28px;border-bottom:2px solid var(--color-divider)">
+      <h1 style="font-size:clamp(28px,5vw,52px);line-height:1.03;letter-spacing:-0.03em;margin:0 0 14px;max-width:20ch">Compare two candidates</h1>
+      <p style="font-size:17px;line-height:1.5;max-width:56ch;margin:0;text-wrap:pretty">The same fields for both, in the same order, drawn from the same records. Where an office does not publish something, the row says so rather than staying blank.</p>
+    </header>
+
+    <div style="display:grid;grid-template-columns:clamp(70px,18%,200px) minmax(0,1fr) minmax(0,1fr);gap:0;border-bottom:2px solid var(--color-divider)">
+      <div style="padding:24px clamp(10px,2vw,24px) 24px 0;border-right:1px solid var(--color-divider);display:flex;align-items:flex-end;min-width:0">
+        <span style="font-size:11px;letter-spacing:0.01em;color:color-mix(in srgb,var(--color-text) 70%,transparent)">Choose two</span>
+      </div>
+      <sc-for list="{{ comparePickers }}" as="p" hint-placeholder-count="2">
+        <div style="padding:clamp(12px,3vw,24px);border-right:1px solid var(--color-divider);min-width:0">
+          <div style="font-size:11px;letter-spacing:0.01em;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin-bottom:8px">{{ p.label }}</div>
+          <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}">
+            <select class="input" value="{{ p.value }}" onChange="{{ p.onNative }}" aria-label="{{ p.label }}" style="width:100%;min-height:44px;font-size:15px;border:2px solid var(--color-text);background:transparent;padding:8px 12px">
+              <sc-for list="{{ p.nativeOptions }}" as="o" hint-placeholder-count="6">
+                <option value="{{ o.value }}">{{ o.label }}</option>
+              </sc-for>
+            </select>
+          </sc-if>
+          <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+            <div data-dd="{{ p.id }}" style="position:relative">
+              <button type="button" id="ddt-{{ p.id }}" onClick="{{ p.onToggle }}" onKeyDown="{{ p.onTriggerKey }}" aria-haspopup="listbox" aria-expanded="{{ p.open }}" aria-label="{{ p.label }}" style="width:100%;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:var(--font-body);font-size:15px;text-align:left;border:2px solid var(--color-text);background:transparent;color:var(--color-text);padding:8px 10px 8px 12px;cursor:pointer" style-hover="background:var(--color-accent-100)">
+                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ p.valueLabel }}</span>
+                <sc-if value="{{ p.closed }}" hint-placeholder-val="{{ true }}">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;color:var(--color-accent-700)"><path d="m6 9 6 6 6-6"></path></svg>
+                </sc-if>
+                <sc-if value="{{ p.open }}" hint-placeholder-val="{{ false }}">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;color:var(--color-accent-700)"><path d="m18 15-6-6-6 6"></path></svg>
+                </sc-if>
+              </button>
+              <sc-if value="{{ p.open }}" hint-placeholder-val="{{ false }}">
+                <div style="position:absolute;z-index:60;top:calc(100% + 4px);left:0;right:0;border:2px solid var(--color-text);background:var(--color-bg);box-shadow:var(--shadow-md);display:flex;flex-direction:column;max-height:340px">
+                  <sc-if value="{{ p.searchable }}" hint-placeholder-val="{{ false }}">
+                    <div style="padding:10px;border-bottom:2px solid var(--color-divider);display:flex;align-items:center;gap:8px">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;color:color-mix(in srgb,var(--color-text) 60%,transparent)"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                      <input id="dds-{{ p.id }}" type="text" value="{{ p.searchValue }}" onChange="{{ p.onSearch }}" onKeyDown="{{ p.onListKey }}" placeholder="Search candidates…" aria-label="Search candidates" style="flex:1;min-width:0;font-family:var(--font-body);font-size:14px;border:0;background:transparent;color:var(--color-text);padding:2px 0;outline:none">
+                    </div>
+                  </sc-if>
+                  <div id="ddl-{{ p.id }}" role="listbox" aria-label="{{ p.label }}" onKeyDown="{{ p.onListKey }}" tabIndex="-1" style="overflow-y:auto;flex:1;outline:none">
+                    <sc-for list="{{ p.options }}" as="o" hint-placeholder-count="6">
+                      <button type="button" id="{{ o.optId }}" role="option" aria-selected="{{ o.selected }}" onClick="{{ o.onPick }}" onMouseEnter="{{ o.onHover }}" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;font-family:var(--font-body);font-size:14px;line-height:1.35;padding:10px 12px;border:0;border-bottom:1px solid var(--color-divider);background:{{ o.bg }};color:var(--color-text);cursor:pointer">
+                        <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.label }}</span>
+                        <sc-if value="{{ o.selected }}" hint-placeholder-val="{{ false }}">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;color:var(--color-accent-700)"><path d="M20 6 9 17l-5-5"></path></svg>
+                        </sc-if>
+                        <sc-if value="{{ o.isClear }}" hint-placeholder-val="{{ false }}">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;color:color-mix(in srgb,var(--color-text) 60%,transparent)"><path d="M18 6 6 18"></path><path d="M6 6l12 12"></path></svg>
+                        </sc-if>
+                      </button>
+                    </sc-for>
+                    <sc-if value="{{ p.noMatch }}" hint-placeholder-val="{{ false }}">
+                      <div style="padding:16px 12px;font-size:13px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">No candidate matches that.</div>
+                    </sc-if>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{ hasCompare }}" hint-placeholder-val="{{ false }}">
+      <div style="display:grid;grid-template-columns:clamp(70px,18%,200px) minmax(0,1fr) minmax(0,1fr);gap:0;border-bottom:2px solid var(--color-divider)">
+        <div style="border-right:1px solid var(--color-divider)"></div>
+        <sc-for list="{{ compareHeads }}" as="h" hint-placeholder-count="2">
+          <div style="padding:clamp(12px,3vw,24px);border-right:1px solid var(--color-divider);display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center;min-width:0;container-type:inline-size">
+            <sc-if value="{{ h.hasPhoto }}" hint-placeholder-val="{{ false }}">
+              <span aria-hidden="true" class="grayscale" style="width:clamp(40px,32cqw,72px);height:clamp(40px,32cqw,72px);display:block;flex:none;background-image:url({{ h.photo }});background-size:cover;background-position:center;background-color:color-mix(in srgb,var(--color-text) 10%,transparent)"></span>
+            </sc-if>
+            <sc-if value="{{ h.noPhoto }}" hint-placeholder-val="{{ true }}">
+              <span aria-hidden="true" style="width:clamp(40px,32cqw,72px);height:clamp(40px,32cqw,72px);display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--color-text) 12%,transparent);font-family:var(--font-heading);font-size:clamp(14px,11cqw,22px);font-weight:800;flex:none">{{ h.initials }}</span>
+            </sc-if>
+            <div style="min-width:0">
+              <div style="font-family:var(--font-heading);font-weight:800;font-size:clamp(14px,13cqw,22px);letter-spacing:-0.02em;line-height:1.15;margin-bottom:5px;overflow-wrap:break-word;hyphens:auto">{{ h.name }}</div>
+              <div style="font-size:clamp(11px,8cqw,13px);color:color-mix(in srgb,var(--color-text) 70%,transparent);line-height:1.35;overflow-wrap:break-word">{{ h.office }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <sc-for list="{{ compareRows }}" as="row" hint-placeholder-count="9">
+        <div style="display:grid;grid-template-columns:clamp(70px,18%,200px) minmax(0,1fr) minmax(0,1fr);gap:0;border-bottom:1px solid var(--color-divider)">
+          <div style="padding:16px clamp(10px,2vw,24px) 16px 0;border-right:1px solid var(--color-divider);font-size:12px;letter-spacing:0.01em;color:color-mix(in srgb,var(--color-text) 70%,transparent);min-width:0;overflow-wrap:break-word">{{ row.label }}</div>
+          <div style="padding:16px clamp(12px,3vw,24px);border-right:1px solid var(--color-divider);container-type:inline-size;min-width:0"><span style="display:block;font-size:clamp(12px,4.6cqw,15px);font-weight:600;line-height:1.45;overflow-wrap:break-word;hyphens:auto">{{ row.a }}</span></div>
+          <div style="padding:16px clamp(12px,3vw,24px);border-right:1px solid var(--color-divider);container-type:inline-size;min-width:0"><span style="display:block;font-size:clamp(12px,4.6cqw,15px);font-weight:600;line-height:1.45;overflow-wrap:break-word;hyphens:auto">{{ row.b }}</span></div>
+        </div>
+      </sc-for>
+    </sc-if>
+
+    <sc-if value="{{ noCompare }}" hint-placeholder-val="{{ true }}">
+      <div style="padding:64px 0">
+        <p style="font-size:15px;color:color-mix(in srgb,var(--color-text) 70%,transparent);max-width:46ch;margin:0;text-wrap:pretty">Pick a candidate in each column, or use “Add to compare” on any race page.</p>
+      </div>
+    </sc-if>
+  </main>
+  </sc-if>
+
+  <!-- ══════════ BALLOT BUILDER ══════════ -->
+  <sc-if value="{{ showBallot }}" hint-placeholder-val="{{ false }}">
+  <main id="main-content" style="max-width:1360px;margin:0 auto;padding:0 clamp(16px,4vw,32px)">
+    <header style="padding:56px 0 32px;border-bottom:2px solid var(--color-divider)">
+      <h1 style="font-size:clamp(28px,5vw,52px);line-height:1.03;letter-spacing:-0.03em;margin:0 0 14px;max-width:18ch">Build your ballot</h1>
+      <p style="font-size:17px;line-height:1.5;max-width:58ch;margin:0;text-wrap:pretty">{{ ballotIntro }}</p>
+    </header>
+
+    <div style="display:flex;flex-wrap:wrap;gap:0">
+      <aside style="border-right:2px solid var(--color-divider);padding:28px 32px 40px 0;flex:1 1 280px;min-width:0">
+        <div style="display:flex;flex-direction:column;gap:22px;position:sticky;top:96px">
+          <sc-for list="{{ ballotPickers }}" as="p" hint-placeholder-count="4">
+            <div class="field">
+              <label style="display:block;font-size:11px;letter-spacing:0.01em;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin-bottom:7px">{{ p.label }}</label>
+              <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}">
+                <select class="input" value="{{ p.value }}" onChange="{{ p.onNative }}" aria-label="{{ p.label }}" style="width:100%;min-height:44px;font-size:15px;border:2px solid var(--color-text);background:transparent;padding:8px 12px">
+                  <sc-for list="{{ p.nativeOptions }}" as="o" hint-placeholder-count="4">
+                    <option value="{{ o.value }}">{{ o.label }}</option>
+                  </sc-for>
+                </select>
+              </sc-if>
+              <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+                <div data-dd="{{ p.id }}" style="position:relative">
+                  <button type="button" id="ddt-{{ p.id }}" onClick="{{ p.onToggle }}" onKeyDown="{{ p.onTriggerKey }}" aria-haspopup="listbox" aria-expanded="{{ p.open }}" aria-label="{{ p.label }}" style="width:100%;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:var(--font-body);font-size:15px;text-align:left;border:2px solid var(--color-text);background:transparent;color:var(--color-text);padding:8px 10px 8px 12px;cursor:pointer" style-hover="background:var(--color-accent-100)">
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ p.valueLabel }}</span>
+                    <sc-if value="{{ p.closed }}" hint-placeholder-val="{{ true }}">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;color:var(--color-accent-700)"><path d="m6 9 6 6 6-6"></path></svg>
+                    </sc-if>
+                    <sc-if value="{{ p.open }}" hint-placeholder-val="{{ false }}">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;color:var(--color-accent-700)"><path d="m18 15-6-6-6 6"></path></svg>
+                    </sc-if>
+                  </button>
+                  <sc-if value="{{ p.open }}" hint-placeholder-val="{{ false }}">
+                    <div style="position:absolute;z-index:60;top:calc(100% + 4px);left:0;right:0;border:2px solid var(--color-text);background:var(--color-bg);box-shadow:var(--shadow-md);display:flex;flex-direction:column;max-height:320px">
+                      <sc-if value="{{ p.searchable }}" hint-placeholder-val="{{ false }}">
+                        <div style="padding:10px;border-bottom:2px solid var(--color-divider);display:flex;align-items:center;gap:8px">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;color:color-mix(in srgb,var(--color-text) 60%,transparent)"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                          <input id="dds-{{ p.id }}" type="text" value="{{ p.searchValue }}" onChange="{{ p.onSearch }}" onKeyDown="{{ p.onListKey }}" placeholder="Search…" aria-label="Search options" style="flex:1;min-width:0;font-family:var(--font-body);font-size:14px;border:0;background:transparent;color:var(--color-text);padding:2px 0;outline:none">
+                        </div>
+                      </sc-if>
+                      <div id="ddl-{{ p.id }}" role="listbox" aria-label="{{ p.label }}" onKeyDown="{{ p.onListKey }}" tabIndex="-1" style="overflow-y:auto;flex:1">
+                        <sc-for list="{{ p.options }}" as="o" hint-placeholder-count="4">
+                          <button type="button" id="{{ o.optId }}" role="option" aria-selected="{{ o.selected }}" onClick="{{ o.onPick }}" onMouseEnter="{{ o.onHover }}" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;font-family:var(--font-body);font-size:14px;line-height:1.35;padding:10px 12px;border:0;border-bottom:1px solid var(--color-divider);background:{{ o.bg }};color:var(--color-text);cursor:pointer">
+                            <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.label }}</span>
+                            <sc-if value="{{ o.selected }}" hint-placeholder-val="{{ false }}">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;color:var(--color-accent-700)"><path d="M20 6 9 17l-5-5"></path></svg>
+                            </sc-if>
+                          </button>
+                        </sc-for>
+                        <sc-if value="{{ p.noMatch }}" hint-placeholder-val="{{ false }}">
+                          <div style="padding:16px 12px;font-size:13px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">Nothing matches that.</div>
+                        </sc-if>
+                      </div>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <div style="border-top:2px solid var(--color-divider);padding-top:16px">
+            <p style="font-size:12px;line-height:1.55;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin:0 0 12px;text-wrap:pretty">{{ lookupNote }}</p>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <sc-for list="{{ lookups }}" as="l" hint-placeholder-count="2">
+                <a href="{{ l.url }}" target="_blank" rel="noopener" style="font-size:13px;font-weight:600">{{ l.label }}<span style="white-space:nowrap"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-1px;margin-left:4px"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span></a>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <div style="padding:28px 0 40px clamp(16px,3vw,40px);min-width:0;flex:999 1 420px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding-bottom:14px;border-bottom:2px solid var(--color-divider)">
+          <h2 style="font-size:12px;letter-spacing:0.01em;margin:0">{{ ballotHeading }}</h2>
+          <span style="font-size:13px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">{{ ballotCount }}</span>
+        </div>
+        <sc-for list="{{ ballotGroups }}" as="grp" hint-placeholder-count="2">
+          <section>
+            <h3 style="font-size:12px;letter-spacing:0.01em;margin:28px 0 0;padding-bottom:10px;color:var(--color-accent-700)">{{ grp.label }}</h3>
+            <sc-for list="{{ grp.races }}" as="r" hint-placeholder-count="3">
+              <button type="button" onClick="{{ r.open }}" style="display:block;width:100%;text-align:left;border:0;border-top:1px solid var(--color-divider);background:transparent;cursor:pointer;padding:16px 0;font:inherit;color:inherit" style-hover="background:color-mix(in srgb,var(--color-text) 4%,transparent)">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(160px,100%),1fr));gap:12px 24px;align-items:baseline">
+                  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;min-width:0">
+                    <span style="font-family:var(--font-heading);font-weight:800;font-size:18px;letter-spacing:-0.02em;line-height:1.2">{{ r.office }}</span>
+                    <sc-if value="{{ r.numberedSeat }}" hint-placeholder-val="{{ false }}">
+                      <span style="display:inline-flex;align-items:baseline;gap:5px;border:1px solid var(--color-text);padding:2px 8px;white-space:nowrap;line-height:1.3">
+                        <span style="font-size:11px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">{{ r.seatWord }}</span>
+                        <span style="font-family:var(--font-heading);font-weight:800;font-size:15px;letter-spacing:-0.01em">{{ r.seatNum }}</span>
+                      </span>
+                    </sc-if>
+                    <sc-if value="{{ r.plainSeat }}" hint-placeholder-val="{{ false }}">
+                      <span style="display:inline-flex;align-items:center;border:1px solid var(--color-text);padding:3px 8px;white-space:nowrap;line-height:1.3;font-size:11px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">{{ r.seatLabelText }}</span>
+                    </sc-if>
+                  </div>
+                  <div style="font-size:13px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">{{ r.countLabel }}</div>
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.05em">{{ r.dateLabel }}</div>
+                </div>
+              </button>
+            </sc-for>
+          </section>
+        </sc-for>
+      </div>
+    </div>
+  </main>
+  </sc-if>
+
+  <!-- compare tray -->
+  <sc-if value="{{ trayOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;left:0;right:0;bottom:0;z-index:30;border-top:2px solid var(--color-text);background:var(--color-bg)">
+      <div style="max-width:1360px;margin:0 auto;padding:14px clamp(16px,4vw,32px);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px">
+        <div style="font-size:14px;font-weight:600">{{ trayLabel }}</div>
+        <div style="display:flex;gap:10px">
+          <button type="button" class="btn btn-secondary" onClick="{{ clearCompare }}">Clear</button>
+          <button type="button" class="btn btn-primary" onClick="{{ goCompare }}"><span style="display:inline-flex;align-items:center;gap:7px">Compare <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></span></button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <footer style="border-top:2px solid var(--color-divider);margin-top:56px">
+    <div style="max-width:1360px;margin:0 auto;padding:36px clamp(16px,4vw,32px) 0">
+      <div style="border:2px solid var(--color-text)">
+        <div style="display:flex;align-items:center;gap:11px;padding:16px clamp(18px,2.4vw,28px);border-bottom:2px solid var(--color-text)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+          <div style="font-family:var(--font-heading);font-weight:800;font-size:clamp(18px,1.7vw,22px);line-height:1.15;letter-spacing:-0.02em;text-wrap:pretty">{{ disclaimerHeading }}</div>
+        </div>
+        <div style="overflow:hidden">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));width:calc(100% + 2px);margin-left:-1px">
+            <sc-for list="{{ disclaimerParas }}" as="p" hint-placeholder-count="3">
+              <div style="padding:20px clamp(18px,2.4vw,26px);border-left:1px solid var(--color-divider);border-top:1px solid var(--color-divider);margin-top:-1px">
+                <div style="font-size:13px;font-weight:700;letter-spacing:-0.005em;margin-bottom:9px">{{ p.title }}</div>
+                <p style="font-size:13px;line-height:1.6;margin:0;color:color-mix(in srgb,var(--color-text) 76%,transparent);text-wrap:pretty">{{ p.text }}</p>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="border-top:2px solid var(--color-text);padding:16px clamp(18px,2.4vw,28px);display:flex;flex-wrap:wrap;align-items:center;gap:10px 26px">
+          <div style="font-size:12px;letter-spacing:0.01em;color:color-mix(in srgb,var(--color-text) 70%,transparent)">{{ verifyLabel }}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px 10px">
+            <sc-for list="{{ verifyLinks }}" as="v" hint-placeholder-count="3">
+              <a href="{{ v.url }}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;border:2px solid var(--color-text);padding:7px 12px;font-size:12px;font-weight:600;text-decoration:none;color:var(--color-text)" style-hover="background:var(--color-accent-100);border-color:var(--color-accent-700);color:var(--color-accent-700)">
+                <span>{{ v.label }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;opacity:0.65"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg>
+              </a>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="max-width:1360px;margin:0 auto;padding:36px clamp(16px,4vw,32px) 48px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:32px 48px">
+      <div>
+        <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;margin-bottom:10px">Corrections</div>
+        <p style="font-size:13px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin:0 0 12px;max-width:46ch;text-wrap:pretty">See a mistake? Tell us and we will fix it against the record, not against an opinion. Say which race, which candidate, and which document you are reading.</p>
+        <p style="font-size:13px;line-height:1.6;color:var(--color-accent-700);margin:0;max-width:46ch;text-wrap:pretty">{{ colorNote }}</p>
+      </div>
+      <div>
+        <div style="font-size:11px;letter-spacing:0.01em;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin-bottom:12px">Sources</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ sources }}" as="s" hint-placeholder-count="4">
+            <a href="{{ s.url }}" target="_blank" rel="noopener" style="font-size:13px;line-height:1.4">{{ s.label }}<span style="white-space:nowrap"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-1px;margin-left:4px"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span></a>
+          </sc-for>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;letter-spacing:0.01em;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin-bottom:12px">Known gaps</div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <sc-for list="{{ gaps }}" as="g" hint-placeholder-count="3">
+            <p style="font-size:12px;line-height:1.5;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin:0;text-wrap:pretty">{{ g.text }}</p>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--color-divider)">
+      <div style="max-width:1360px;margin:0 auto;padding:16px clamp(16px,4vw,32px);display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 24px;font-size:12px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">
+        <span>Ballot Record · an independent, non-partisan index · not a government website</span>
+        <span>{{ photoNote }}</span>
+      </div>
+    </div>
+  </footer>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;startCounty&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;All&quot;, &quot;Leon&quot;, &quot;Gadsden&quot;], &quot;default&quot;: &quot;All&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Behaviour&quot; },
+  &quot;includeSpecialDistricts&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Behaviour&quot; },
+  &quot;photos&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;Initials only&quot;, &quot;Placeholder portraits&quot;], &quot;default&quot;: &quot;Initials only&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Presentation&quot; }
+}">
+class Component extends DCLogic {
+  state = {
+    data: null, view: "index", raceId: null, q: "",
+    f: { county: [], level: [], party: [], date: [], status: [], seat: [], district: [], web: [] },
+    cmp: [null, null],
+    ballot: { county: "Leon", cc: "any", sb: "any", city: "any" },
+    dd: null, ddq: "", ddIdx: -1, narrow: false
+  };
+
+  componentDidMount() {
+    document.documentElement.lang = "en";
+    /* native select below this width; custom listbox everywhere else */
+    this.mq = window.matchMedia("(max-width: 640px)");
+    this.onMQ = () => this.setState({ narrow: this.mq.matches, dd: null });
+    this.mq.addEventListener("change", this.onMQ);
+    this.onDocDown = (e) => {
+      if (!this.state.dd) return;
+      if (!e.target.closest || !e.target.closest("[data-dd]")) this.closeDD();
+    };
+    this.onKey = (e) => {
+      if (!this.state.dd) return;
+      if (e.key === "Escape") { e.preventDefault(); this.closeDD(true); }
+    };
+    document.addEventListener("mousedown", this.onDocDown);
+    document.addEventListener("keydown", this.onKey);
+    this.setState({ narrow: this.mq.matches });
+    const applied = (d) => {
+      const first = ((d.meta && d.meta.regions) || [])[0];
+      const next = { data: d, ballot: { ...this.state.ballot, county: first ? first.id : this.state.ballot.county } };
+      const sc = this.props.startCounty;
+      if (sc && sc !== "All") next.f = { ...this.state.f, county: [sc] };
+      this.setState(next);
+    };
+    fetch("data/races.json").then(r => r.json()).then(applied).catch(() => this.setState({ data: { meta: {}, races: [] } }));
+  }
+
+  componentWillUnmount() {
+    if (this.mq && this.onMQ) this.mq.removeEventListener("change", this.onMQ);
+    document.removeEventListener("mousedown", this.onDocDown);
+    document.removeEventListener("keydown", this.onKey);
+  }
+
+  /* ---------- custom dropdown ---------- */
+  closeDD(refocus) {
+    const id = this.state.dd;
+    this.setState({ dd: null, ddq: "", ddIdx: -1 });
+    if (refocus && id) {
+      const t = document.getElementById("ddt-" + id);
+      if (t) t.focus();
+    }
+  }
+  openDD(id) {
+    this.setState({ dd: id, ddq: "", ddIdx: -1 }, () => {
+      const s = document.getElementById("dds-" + id) || document.getElementById("ddl-" + id);
+      if (s) s.focus();
+    });
+  }
+  toggleDD(id) { this.state.dd === id ? this.closeDD(true) : this.openDD(id); }
+
+  /* one dropdown view model, used by every picker on the page */
+  ddVM(id, label, value, options, onSet, placeholder, searchable, clearable) {
+    const open = this.state.dd === id;
+    const q = open ? this.state.ddq.trim().toLowerCase() : "";
+    const shown = q ? options.filter(o => o.label.toLowerCase().includes(q)) : options;
+    const idx = this.state.ddIdx;
+    const cur = options.find(o => o.value === value);
+    const clearRow = clearable && cur ? [{ value: "", label: "Clear selection", isClear: true }] : [];
+    const pick = (v) => { onSet(v); this.closeDD(true); };
+    const move = (d) => {
+      if (!shown.length) return;
+      const n = idx < 0 ? (d > 0 ? 0 : shown.length - 1) : (idx + d + shown.length) % shown.length;
+      this.setState({ ddIdx: n });
+      const el = document.getElementById("ddo-" + id + "-" + n);
+      const box = document.getElementById("ddl-" + id);
+      if (el && box) {
+        const t = el.offsetTop, b = t + el.offsetHeight;
+        if (t < box.scrollTop) box.scrollTop = t;
+        else if (b > box.scrollTop + box.clientHeight) box.scrollTop = b - box.clientHeight;
+      }
+    };
+    return {
+      id, label, value,
+      valueLabel: cur ? cur.label : (placeholder || "Select"),
+      isPlaceholder: !cur, hasValue: !!cur,
+      open, closed: !open,
+      arrow: open ? "lucide:chevron-up" : "lucide:chevron-down",
+      searchable: !!searchable && open,
+      searchValue: this.state.ddq,
+      onSearch: (e) => this.setState({ ddq: e.target.value, ddIdx: -1 }),
+      onToggle: () => this.toggleDD(id),
+      onNative: (e) => onSet(e.target.value),
+      noMatch: open && shown.length === 0,
+      countLabel: shown.length === options.length ? shown.length + " options" : shown.length + " of " + options.length,
+      onListKey: (e) => {
+        if (e.key === "ArrowDown") { e.preventDefault(); move(1); }
+        else if (e.key === "ArrowUp") { e.preventDefault(); move(-1); }
+        else if (e.key === "Enter") { e.preventDefault(); const o = shown[idx < 0 ? 0 : idx]; if (o) pick(o.value); }
+        else if (e.key === "Escape") { e.preventDefault(); this.closeDD(true); }
+      },
+      onTriggerKey: (e) => {
+        if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") { e.preventDefault(); this.openDD(id); }
+      },
+      options: [...clearRow, ...shown].map((o, i) => ({
+        value: o.value, label: o.label,
+        selected: o.value === value && !o.isClear, unselected: o.value !== value,
+        isClear: !!o.isClear,
+        active: i === idx,
+        optId: "ddo-" + id + "-" + i,
+        bg: i === idx ? "var(--color-accent-100)" : "transparent",
+        onPick: () => pick(o.value),
+        onHover: () => this.setState({ ddIdx: i })
+      })),
+      nativeOptions: clearable ? [{ value: "", label: placeholder || "Select" }, ...options] : options
+    };
+  }
+
+  /* ---------- helpers ---------- */
+  last(name) {
+    const clean = String(name).replace(/["“”]/g, "").replace(/,\s*(Jr\.|Sr\.|II|III|IV)\.?$/i, "").trim();
+    const parts = clean.split(/\s+/).filter(Boolean);
+    return (parts[parts.length - 1] || clean).toLowerCase();
+  }
+  buildCalendar(cal) {
+    const now = new Date(); now.setHours(0, 0, 0, 0);
+    const day = (iso) => { const [y, m, d] = String(iso).split("-").map(Number); return new Date(y, m - 1, d); };
+    let nextFound = false;
+    return cal.map((c) => {
+      const start = c.iso ? day(c.iso) : null;
+      const end = c.isoEnd ? day(c.isoEnd) : start;
+      const passed = end ? end < now : false;
+      const active = start && end ? start <= now && now <= end : false;
+      const isNext = !passed && !active && !nextFound;
+      if (isNext || active) nextFound = true;
+      const diff = start ? Math.round((start - now) / 86400000) : null;
+      let status = "Passed";
+      if (active) status = "Happening now";
+      else if (!passed && diff === 0) status = "Today";
+      else if (!passed && diff === 1) status = "Tomorrow";
+      else if (!passed) status = diff + " days away";
+      return {
+        label: c.label || "", date: c.date, body: c.body,
+        status,
+        passed, ahead: !passed,
+        live: active || isNext,
+        muted: passed,
+        dateColor: passed ? "color-mix(in srgb,var(--color-text) 50%,transparent)" : "var(--color-text)",
+        bodyColor: passed ? "color-mix(in srgb,var(--color-text) 58%,transparent)" : "color-mix(in srgb,var(--color-text) 72%,transparent)",
+        labelColor: passed ? "color-mix(in srgb,var(--color-text) 55%,transparent)" : "var(--color-text)",
+        barBg: active || isNext ? "var(--color-accent)" : passed ? "color-mix(in srgb,var(--color-text) 22%,transparent)" : "var(--color-text)",
+        statusColor: active || isNext ? "var(--color-accent-700)" : passed ? "color-mix(in srgb,var(--color-text) 45%,transparent)" : "color-mix(in srgb,var(--color-text) 65%,transparent)"
+      };
+    });
+  }
+  goto(patch) {
+    this.setState(patch, () => {
+      const top = () => {
+        try {
+          if (typeof window !== "undefined") window.scrollTo(0, 0);
+          const de = document.scrollingElement || document.documentElement;
+          if (de) de.scrollTop = 0;
+          if (document.body) document.body.scrollTop = 0;
+          let el = document.getElementById("main-content");
+          while (el && el !== document.body) {
+            if (el.scrollHeight > el.clientHeight + 1) {
+              const ov = getComputedStyle(el).overflowY;
+              if (ov === "auto" || ov === "scroll") el.scrollTop = 0;
+            }
+            el = el.parentElement;
+          }
+        } catch (e) {}
+      };
+      top();
+      requestAnimationFrame(top);
+    });
+  }
+  initials(name) {
+    const p = String(name).replace(/["“”().]/g, "").split(/\s+/).filter(Boolean);
+    return ((p[0] || "")[0] || "") + ((p[p.length - 1] || "")[0] || "");
+  }
+  fmt(d) {
+    if (!d) return null;
+    const [y, m, day] = d.split("-").map(Number);
+    return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][m - 1] + " " + day + ", " + y;
+  }
+  dateLabel(r) {
+    if (!r.electionDate) return "No election";
+    if (r.electionDate === "2026-08-18") return "Aug 18 primary";
+    if (r.electionDate === "2026-11-03") return "Nov 3 general";
+    return this.fmt(r.electionDate);
+  }
+  statusLabel(r) {
+    const n = r.candidates.filter(c => c.status !== "Withdrew").length;
+    if (n === 0) return "No candidates";
+    if (n === 1) return "Unopposed";
+    return n + " candidates";
+  }
+  seatLabel(r) { return r.candidates.some(c => c.incumbent) ? "Incumbent running" : "Open seat"; }
+  partyShort(p) {
+    if (!p) return "Not stated";
+    return { "Republican": "REP", "Democrat": "DEM", "No Party Affiliation": "NPA", "Write-In": "WRI", "Libertarian": "LPF", "Nonpartisan office": "NONPARTISAN" }[p] || p;
+  }
+  partyKey(p) {
+    if (p === "Republican") return "rep";
+    if (p === "Democrat") return "dem";
+    return "oth";
+  }
+  seatParts(seat) {
+    if (!seat || seat === "Florida") return { has: false, word: "", num: "", plain: false, text: "" };
+    const s = String(seat).trim();
+    const m = /^([A-Za-z][A-Za-z-]*)\s+(\d+(?:\s*,\s*\d+)*)$/.exec(s);
+    if (m) return { has: true, word: m[1], num: m[2], plain: false, text: s };
+    /* no number in it (merit retention and the like) — one label, not a numbered seat */
+    return { has: true, word: "", num: "", plain: true, label: s, text: s };
+  }
+  /* Every title on the site is built here: office, then the seat as its own chip.
+     officeText is the same title flattened for places that need a single string. */
+  titleVM(r) {
+    const sp = this.seatParts(r.seat);
+    return {
+      office: r.office,
+      hasSeat: sp.has, noSeat: !sp.has,
+      numberedSeat: sp.has && !sp.plain, plainSeat: sp.has && !!sp.plain,
+      seatWord: sp.word, seatNum: sp.num, seatLabelText: sp.label || sp.text,
+      officeText: r.office + (sp.has ? ", " + sp.text : "")
+    };
+  }
+  photoOn() { return (this.props.photos ?? "Initials only") === "Placeholder portraits"; }
+
+  /* An empty search should answer the question it implies: an office can be missing
+     because it is filtered out, or because it simply has no election this cycle. */
+  noResultReason(isEmpty) {
+    const q = (this.state.q || "").trim().toLowerCase();
+    const nu = ((this.state.data && this.state.data.meta) || {}).notUpThisCycle || {};
+    if (!isEmpty || q.length < 3) return { offCycleHit: null };
+    const hit = (nu.offices || []).find(o => {
+      const t = o.toLowerCase();
+      return t.includes(q) || q.split(/\s+/).some(w => w.length > 3 && t.includes(w));
+    });
+    if (!hit) return { offCycleHit: null };
+    return {
+      offCycleHit: hit,
+      offCycleNote: nu.note || "",
+      offCycleHeading: hit + " has no 2026 election."
+    };
+  }
+  sortedCands(r) {
+    return [...r.candidates].sort((a, b) => this.last(a.name).localeCompare(this.last(b.name)));
+  }
+  activeCands(r) { return this.sortedCands(r).filter(c => c.status !== "Withdrew"); }
+  withdrawnCands(r) { return this.sortedCands(r).filter(c => c.status === "Withdrew"); }
+
+  allRaces() {
+    const d = this.state.data;
+    if (!d) return [];
+    const inc = this.props.includeSpecialDistricts ?? true;
+    return d.races.filter(r => inc || r.level !== "Special district");
+  }
+
+  /* ---------- filtering ---------- */
+  matches(r) {
+    const f = this.state.f, q = this.state.q.trim().toLowerCase();
+    if (f.county.length && !f.county.some(c => r.counties.includes(c))) return false;
+    if (f.level.length && !f.level.includes(r.level)) return false;
+    if (f.party.length && !r.candidates.some(c => f.party.includes(this.partyShort(c.party) === "NONPARTISAN" ? "Nonpartisan" : (c.party || "Not stated")))) return false;
+    if (f.date.length && !f.date.includes(this.dateLabel(r))) return false;
+    if (f.status.length) {
+      const n = r.candidates.filter(c => c.status !== "Withdrew").length;
+      const s = n === 0 ? "No candidates" : n === 1 ? "Unopposed" : "Contested";
+      if (!f.status.includes(s)) return false;
+    }
+    if (f.seat.length && !f.seat.includes(this.seatLabel(r))) return false;
+    if (f.district.length && !f.district.includes(r.districtNumber || "None")) return false;
+    if (f.web.length && !r.candidates.some(c => c.website)) return false;
+    if (q) {
+      const hay = [r.office, r.seat, r.jurisdiction, r.county, r.level, r.heldBy && r.heldBy.name, ...r.candidates.map(c => c.name)].filter(Boolean).join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  }
+
+  toggle(group, value) {
+    return () => {
+      const cur = this.state.f[group];
+      const next = cur.includes(value) ? cur.filter(v => v !== value) : [...cur, value];
+      this.setState({ f: { ...this.state.f, [group]: next } });
+    };
+  }
+
+  buildFilterGroups() {
+    const races = this.allRaces();
+    const f = this.state.f;
+    const uniq = (arr) => [...new Set(arr.filter(Boolean))];
+    const parties = uniq(races.flatMap(r => r.candidates.map(c => this.partyShort(c.party) === "NONPARTISAN" ? "Nonpartisan" : (c.party || "Not stated"))));
+    const order = ["Democrat", "Republican", "No Party Affiliation", "Libertarian", "Write-In", "Nonpartisan", "Not stated"];
+    parties.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    const districts = uniq(races.map(r => r.districtNumber)).sort((a, b) => Number(a) - Number(b));
+    const regions = ((this.state.data && this.state.data.meta && this.state.data.meta.regions) || []).map(r => r.id);
+    const defs = [
+      ["county", "County", regions.length ? regions : uniq(races.flatMap(r => r.counties))],
+      ["level", "Race level", ["Federal", "Statewide", "State", "Judicial", "County", "School board", "Municipal", "Special district"].filter(l => races.some(r => r.level === l))],
+      ["party", "Party", parties],
+      ["date", "Election", ["Aug 18 primary", "Nov 3 general", "No election"]],
+      ["status", "Field", ["Contested", "Unopposed", "No candidates"]],
+      ["seat", "Seat", ["Incumbent running", "Open seat"]],
+      ["district", "District", districts],
+      ["web", "Campaign site", ["Has a website"]]
+    ];
+    return defs.map(([key, label, opts]) => ({
+      key, label,
+      opts: opts.map(o => {
+        const on = f[key].includes(o);
+        return { label: o, on, off: !on, toggle: this.toggle(key, o) };
+      })
+    }));
+  }
+
+  /* ---------- view models ---------- */
+  raceRow(r) {
+    const cands = this.sortedCands(r).filter(c => c.status !== "Withdrew");
+    const held = r.heldBy || {};
+    const sp = this.seatParts(r.seat);
+    return {
+      id: r.id,
+      title: this.titleVM(r).officeText,
+      ...this.titleVM(r),
+      jurisdiction: r.jurisdiction || (r.county + " County"),
+      heldByName: held.name || "Not published",
+      heldByNote: held.note || null,
+      statusLabel: this.statusLabel(r),
+      dateLabel: this.dateLabel(r),
+      countLabel: cands.length === 1 ? "1 candidate" : cands.length + " candidates",
+      empty: cands.length === 0,
+      emptyLabel: r.pending ? "Roster published separately by the Supervisor of Elections" : "No candidates qualified",
+      chips: cands.map(c => ({
+        name: c.name, partyShort: this.partyShort(c.party), partyClass: "p-" + this.partyKey(c.party),
+        photo: c.photo, hasPhoto: this.photoOn(), noPhoto: !this.photoOn(),
+        initials: this.initials(c.name).toUpperCase()
+      })),
+      open: () => this.goto({ view: "race", raceId: r.id })
+    };
+  }
+
+  groupRaces(races) {
+    const order = ["Federal", "Statewide", "State", "Judicial", "County", "School board", "Municipal", "Special district"];
+    const labels = {
+      "Federal": "Federal", "Statewide": "Statewide", "State": "Florida Legislature", "Judicial": "Courts",
+      "County": "County government", "School board": "School board", "Municipal": "Cities and towns", "Special district": "Special districts"
+    };
+    return order.map(lvl => ({
+      label: labels[lvl],
+      races: races.filter(r => r.level === lvl).map(r => this.raceRow(r))
+    })).filter(g => g.races.length);
+  }
+
+  proofRows(c, r) {
+    const na = "Not published in this record";
+    const rows = [
+      ["Ballot name", c.name],
+      ["Status", c.status || "Qualified"],
+      ["Date qualified", this.fmt(c.qualified) || (c.status === "Withdrew" ? "Not applicable" : na)],
+      ...(c.status === "Withdrew" ? [["Date withdrawn", this.fmt(c.withdrew) || na]] : []),
+      ["Method", c.qualifyingMethod || na],
+      ["Petition met", this.fmt(c.petitionMet) || (c.qualifyingMethod === "Qualifying fee" ? "Fee paid instead" : na)],
+      ...(/Lieutenant Governor/.test(r.office) ? [["Running mate", c.runningMate || "Not named"]] : []),
+      ["Treasurer", c.treasurer || na],
+      ["Treasurer filed", this.fmt(c.treasurerFiled) || na],
+      ["Finance total", c.financeTotal == null ? "See linked report" : c.financeTotal]
+    ];
+    return rows.map(([label, value]) => ({ label, value }));
+  }
+
+  candVM(c, r) {
+    const inCmp = this.state.cmp.includes(c.id);
+    return {
+      id: c.id, name: c.name, party: this.partyShort(c.party) === "NONPARTISAN" ? "Nonpartisan office" : (c.party || "Party not stated"),
+      partyClass: c.status === "Withdrew" ? "pc-none" : "pc-" + this.partyKey(c.party),
+      runningMate: c.runningMate || "",
+      hasRunningMate: /Lieutenant Governor/.test(r.office) && !!c.runningMate,
+      incumbent: !!c.incumbent, writeIn: !!c.writeIn && this.partyShort(c.party) !== "WRI",
+      withdrew: c.status === "Withdrew", withdrewLabel: "Withdrew " + (this.fmt(c.withdrew) || "before the deadline"),
+      photo: c.photo, hasPhoto: this.photoOn(), noPhoto: !this.photoOn(),
+      initials: this.initials(c.name).toUpperCase(),
+      proof: this.proofRows(c, r),
+      website: c.website, hasWebsite: !!c.website, noWebsite: !c.website,
+      recordUrl: c.recordUrl, financeUrl: c.financeUrl,
+      compareLabel: inCmp ? "In comparison" : "Add to compare",
+      inCompare: inCmp, notInCompare: !inCmp,
+      addCompare: () => {
+        const cur = this.state.cmp.filter(Boolean);
+        if (cur.includes(c.id)) return this.setState({ cmp: [this.state.cmp[0] === c.id ? null : this.state.cmp[0], this.state.cmp[1] === c.id ? null : this.state.cmp[1]] });
+        const next = this.state.cmp[0] ? [this.state.cmp[0], c.id] : [c.id, this.state.cmp[1]];
+        this.setState({ cmp: next });
+      }
+    };
+  }
+
+  findCand(id) {
+    for (const r of this.allRaces()) {
+      const c = r.candidates.find(x => x.id === id);
+      if (c) return { c, r };
+    }
+    return null;
+  }
+
+  compareRowsFor(a, b) {
+    const na = "Not published";
+    const val = (hit, fn) => hit ? (fn(hit.c, hit.r) ?? na) : "Not selected";
+    const defs = [
+      ["Name on ballot", (c) => c.name],
+      ["Office sought", (c, r) => this.titleVM(r).officeText],
+      ["Where", (c, r) => r.jurisdiction],
+      ["Party", (c) => this.partyShort(c.party) === "NONPARTISAN" ? "Nonpartisan office" : (c.party || "Not stated in the record")],
+      ["Incumbent", (c) => c.incumbent ? "Yes" : "No"],
+      ["Qualifying status", (c) => c.status || "Qualified"],
+      ["Date qualified", (c) => this.fmt(c.qualified)],
+      ["Qualifying method", (c) => c.qualifyingMethod],
+      ["Petition requirement met", (c) => this.fmt(c.petitionMet)],
+      ["Campaign treasurer", (c) => c.treasurer],
+      ["Treasurer filed", (c) => this.fmt(c.treasurerFiled)],
+      ["Campaign website", (c) => c.website || "None on file"],
+      ["Election date", (c, r) => this.dateLabel(r)]
+    ];
+    return defs.map(([label, fn]) => ({ label, a: val(a, fn), b: val(b, fn) }));
+  }
+
+  /* ---------- render ---------- */
+  renderVals() {
+    const d = this.state.data;
+    const meta = (d && d.meta) || {};
+    const view = this.state.view;
+    const races = this.allRaces();
+    const filtered = races.filter(r => this.matches(r));
+    const totalCands = races.reduce((n, r) => n + r.candidates.length, 0);
+
+    const el = meta.elections || {};
+    const regions = meta.regions || [];
+    const primaryDate = (el.primary && el.primary.date) || "2026-08-18";
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const days = Math.max(0, Math.round((new Date(primaryDate + "T00:00:00") - today) / 86400000));
+
+    const nav = [["index", "Races"], ["ballot", "My ballot"], ["compare", "Compare"], ["dates", "Key dates"]].map(([v, label]) => ({
+      label, on: view === v || (v === "index" && view === "race"), off: !(view === v || (v === "index" && view === "race")),
+      go: () => this.goto({ view: v })
+    }));
+
+    const anyFilter = Object.values(this.state.f).some(a => a.length) || !!this.state.q;
+
+    /* race detail */
+    const rr = races.find(r => r.id === this.state.raceId);
+    let race = null;
+    if (rr) {
+      const held = rr.heldBy || {};
+      const src = (meta.sources || []).find(s => s.id === rr.source) || {};
+      const active = this.activeCands(rr);
+      const withdrew = this.withdrawnCands(rr);
+      const rsp = this.seatParts(rr.seat);
+      race = {
+        ...this.titleVM(rr),
+        breadcrumb: [rr.counties.join(" + ") + (rr.counties.length > 1 ? "" : " County"), rr.level].join("  ·  "),
+
+        jurisdiction: rr.jurisdiction || (rr.county + " County"),
+        ballotNote: rr.ballotNote,
+        heldByName: held.name || "Not published",
+        heldByParty: held.party || (held.name ? "Party not stated in the record" : "This office has no published seat holder in the records we index."),
+        heldByNote: held.note || null,
+        sourceUrl: src.url || "#", sourceLabel: src.label || "Supervisor of Elections",
+        candidateHeading: active.length === 1 ? "The one candidate still running" : "Everyone still running",
+        cands: active.map(c => this.candVM(c, rr)),
+        withdrawn: withdrew.map(c => this.candVM(c, rr)),
+        hasWithdrawn: withdrew.length > 0,
+        withdrawnHeading: withdrew.length === 1 ? "One candidate withdrew" : withdrew.length + " candidates withdrew",
+        empty: active.length === 0,
+        emptyTitle: rr.pending ? "Roster not yet indexed here" : "Nobody qualified for this seat",
+        emptyBody: rr.pending
+          ? "The Supervisor of Elections publishes this municipality's candidates in a separate filing. We have not imported it yet."
+          : "Qualifying closed with no candidate for this seat. It will be filled by appointment or left vacant under Florida law.",
+        facts: [
+          { label: "County", value: rr.counties.join(" & ") },
+          { label: "Election", value: this.dateLabel(rr) },
+          { label: "Field", value: this.statusLabel(rr) },
+          { label: "Seat", value: this.seatLabel(rr) }
+        ]
+      };
+    }
+
+    /* compare */
+    const optList = races.flatMap(r => this.sortedCands(r).map(c => ({
+      value: c.id,
+      label: c.name + " · " + this.titleVM(r).officeText + (c.status === "Withdrew" ? " (withdrew)" : "")
+    })));
+    const hitA = this.state.cmp[0] ? this.findCand(this.state.cmp[0]) : null;
+    const hitB = this.state.cmp[1] ? this.findCand(this.state.cmp[1]) : null;
+    const head = (hit) => hit ? {
+      name: hit.c.name, office: this.titleVM(hit.r).officeText,
+      photo: hit.c.photo, hasPhoto: this.photoOn(), noPhoto: !this.photoOn(),
+      initials: this.initials(hit.c.name).toUpperCase()
+    } : { name: "Not selected", office: "", photo: null, hasPhoto: false, noPhoto: true, initials: "" };
+
+    /* ballot builder */
+    const b = this.state.ballot;
+    const ccOpts = [...new Set(races.filter(r => r.counties.includes(b.county) && r.level === "County").map(r => r.districtNumber).filter(Boolean))].sort();
+    const sbOpts = [...new Set(races.filter(r => r.counties.includes(b.county) && r.level === "School board").map(r => r.districtNumber).filter(Boolean))].sort();
+    const cityOpts = [...new Set(races.filter(r => r.counties.includes(b.county) && r.level === "Municipal").map(r => r.office))].sort();
+    const opt = (v, l) => ({ value: v, label: l });
+    const countyOpts = ((meta.regions) || []).map(r => opt(r.id, r.label || r.id));
+    const ccList = [opt("any", "Any district"), ...ccOpts.map(n => opt(n, "District " + n))];
+    const sbList = [opt("any", "Any district"), ...sbOpts.map(n => opt(n, "District " + n))];
+    const cityList = [opt("any", "Not in a city"), ...cityOpts.map(c => opt(c, c))];
+
+    const onBallot = races.filter(r => {
+      if (!r.counties.includes(b.county)) return false;
+      if (r.level === "County" && b.cc !== "any" && r.districtNumber && r.districtNumber !== b.cc) return false;
+      if (r.level === "School board" && b.sb !== "any" && r.districtNumber && r.districtNumber !== b.sb) return false;
+      if (r.level === "Municipal" && b.city !== "any" && r.office !== b.city) return false;
+      if (r.level === "Municipal" && b.city === "any") return false;
+      if (r.level === "Special district") return false;
+      return true;
+    });
+
+    const nrr = this.noResultReason(filtered.length === 0);
+
+    return {
+      nav, showIndex: view === "index", showRace: view === "race" && !!race, showDates: view === "dates",
+      showCompare: view === "compare", showBallot: view === "ballot",
+      goIndex: () => this.goto({ view: "index" }),
+      goCompare: () => this.goto({ view: "compare" }),
+
+      daysToPrimary: days + (days === 1 ? " day away" : " days away"),
+      totalLine: races.length + " races · " + totalCands + " candidates",
+      verifiedOn: this.fmt(meta.lastVerified) || "Aug 6, 2026",
+
+      q: this.state.q,
+      setQ: (e) => this.setState({ q: e.target.value }),
+      resultLine: filtered.length === races.length
+        ? "Showing all " + races.length + " races"
+        : "Showing " + filtered.length + " of " + races.length + " races",
+      filterGroups: this.buildFilterGroups(),
+      anyFilter,
+      clearFilters: () => this.setState({ q: "", f: { county: [], level: [], party: [], date: [], status: [], seat: [], district: [], web: [] } }),
+      groups: this.groupRaces(filtered),
+      narrow: this.state.narrow, wide: !this.state.narrow,
+      noResults: filtered.length === 0,
+      ...nrr,
+      genericEmpty: filtered.length === 0 && !nrr.offCycleHit,
+
+      race,
+
+      comparePickers: [0, 1].map(i => this.ddVM(
+        "cmp" + i,
+        i === 0 ? "Candidate A" : "Candidate B",
+        this.state.cmp[i] || "",
+        optList,
+        (v) => { const n = [...this.state.cmp]; n[i] = v || null; this.setState({ cmp: n }); },
+        "Select a candidate",
+        true, true
+      )),
+      candidateOptions: optList,
+      hasCompare: !!(hitA || hitB),
+      noCompare: !(hitA || hitB),
+      compareHeads: [head(hitA), head(hitB)],
+      compareRows: this.compareRowsFor(hitA, hitB),
+      trayOpen: view !== "compare" && this.state.cmp.filter(Boolean).length > 0,
+      trayLabel: this.state.cmp.filter(Boolean).length === 1 ? "1 candidate selected. Pick one more" : "2 candidates selected",
+      clearCompare: () => this.setState({ cmp: [null, null] }),
+
+      ballotPickers: [
+        this.ddVM("bcounty", "County", b.county, countyOpts, (v) => this.setState({ ballot: { ...b, county: v } }), "Choose a county", countyOpts.length > 8),
+        this.ddVM("bcc", "County Commission district", b.cc, ccList, (v) => this.setState({ ballot: { ...b, cc: v } }), "Any district", ccList.length > 8),
+        this.ddVM("bsb", "School Board district", b.sb, sbList, (v) => this.setState({ ballot: { ...b, sb: v } }), "Any district", sbList.length > 8),
+        this.ddVM("bcity", "City or town", b.city, cityList, (v) => this.setState({ ballot: { ...b, city: v } }), "Not in a city", cityList.length > 8)
+      ],
+      ballotHeading: "Your " + b.county + " County ballot",
+      ballotCount: onBallot.length + " races",
+      ballotGroups: this.groupRaces(onBallot),
+
+      dates: this.buildCalendar(meta.calendar || []),
+      todayLabel: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      offices: regions.map(r => ({ county: r.name, supervisor: r.supervisor, address: r.address, phone: r.phone, url: r.url, domain: r.domain })),
+      lookups: regions.filter(r => r.lookupUrl).map(r => ({ url: r.lookupUrl, label: "Look up " + r.id + " districts" })),
+
+      scope: meta.scope || "",
+      kicker: meta.kicker || "",
+      intro: meta.intro || "",
+      datesIntro: meta.datesIntro || "",
+      ballotIntro: meta.ballotIntro || "",
+      lookupNote: meta.lookupNote || "",
+      colorNote: meta.colorNote || "",
+      explainerHeading: (meta.explainer && meta.explainer.heading) || "",
+      explainerParas: ((meta.explainer && meta.explainer.paras) || []).map(text => ({ text })),
+      primaryLabel: (el.primary && el.primary.label) || "Primary election",
+      primaryShort: (el.primary && el.primary.short) || "",
+      generalLabel: (el.general && el.general.label) || "General election",
+      generalShort: (el.general && el.general.short) || "",
+      generalNote: (el.general && el.general.note) || "",
+      earlyLabel: (el.earlyVoting && el.earlyVoting.label) || "Early voting",
+      earlyShort: (el.earlyVoting && el.earlyVoting.short) || "",
+      notUpNote: (meta.notUpThisCycle && meta.notUpThisCycle.note) || "",
+      notUpOffices: ((meta.notUpThisCycle && meta.notUpThisCycle.offices) || []).map(label => ({ label })),
+
+      disclaimerHeading: (meta.disclaimer && meta.disclaimer.heading) || "",
+      verifyLabel: (meta.disclaimer && meta.disclaimer.verifyLabel) || "",
+      disclaimerParas: ((meta.disclaimer && meta.disclaimer.paras) || []).map(p => ({
+        title: p.title || "", text: p.text || "",
+        isNotGov: p.icon === "not-gov", isRecord: p.icon === "record", isAuthority: p.icon === "authority"
+      })),
+      verifyLinks: regions.map(r => ({ label: r.name + " Supervisor of Elections", host: r.domain, url: r.url }))
+        .concat((meta.sources || []).filter(s => s.id === "dos").map(s => ({
+          label: "Florida Division of Elections", host: "dos.elections.myflorida.com", url: s.url
+        }))),
+      sources: meta.sources || [],
+      gaps: (meta.dataGaps || []).map(text => ({ text })),
+      photoNote: meta.photoNote || ""
+    };
+  }
+}
+
+</script>
+</body>
+</html>
