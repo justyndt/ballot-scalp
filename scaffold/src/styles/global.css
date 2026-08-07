@@ -3,22 +3,12 @@
 @import '@fontsource/archivo/600.css';
 @import '@fontsource/archivo/800.css';
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Modernist tokens, mapped into Tailwind v4's @theme. Every value here came
-   from the design system's styles.css; nothing is invented. Tailwind
-   generates utilities from these names: --color-ink gives text-ink,
-   border-ink, bg-ink; --text-hero gives text-hero, and so on.
-   ───────────────────────────────────────────────────────────────────────── */
 @theme {
   --color-bg: #f3f2f2;
   --color-surface: #eae9e9;
   --color-ink: #201e1d;
   --color-divider: color-mix(in srgb, #201e1d 40%, transparent);
 
-  /* The accent is a slate-teal, NOT the design system's red #ec3013. Red and
-     blue both carry partisan meaning on a ballot, so the accent role is
-     re-pointed to a hue no US party owns. This is an editorial decision —
-     do not "restore" the red. Same ramp structure and lightness steps. */
   --color-accent: #2f7480;
   --color-accent-100: #eef5f6;
   --color-accent-200: #d8e8ea;
@@ -26,7 +16,7 @@
   --color-accent-400: #86b4bc;
   --color-accent-500: #52929c;
   --color-accent-600: #266571;
-  --color-accent-700: #1b4c56; /* accent text at body size — 500/base is only 3:1 here */
+  --color-accent-700: #1b4c56;
   --color-accent-800: #133840;
   --color-accent-900: #0e2a31;
 
@@ -40,9 +30,6 @@
   --color-neutral-800: #444141;
   --color-neutral-900: #2d2b2b;
 
-  /* Party color appears ONLY on hover, ONLY as a bottom rule, and ONLY
-     alongside the visible DEM/REP/NPA text, so color is never the sole
-     carrier of meaning. Never use these as a fill or a badge. */
   --color-party-rep: #b02a1f;
   --color-party-dem: #1c4e9e;
   --color-party-other: #6a6664;
@@ -51,10 +38,8 @@
   --font-body: Archivo, system-ui, sans-serif;
   --font-sans: Archivo, system-ui, sans-serif;
 
-  /* Type scale as measured from the prototype. The clamps are load-bearing:
-     headlines must survive a 320px viewport without breaking mid-word. */
   --text-hero: clamp(34px, 6.2vw, 60px);
-  --text-hero--line-height: 1.03;
+  --text-hero--line-height: 1.02;
   --text-hero--letter-spacing: -0.03em;
   --text-title: clamp(28px, 5vw, 52px);
   --text-title--line-height: 1.03;
@@ -62,9 +47,12 @@
   --text-section: 26px;
   --text-section--line-height: 1.15;
   --text-section--letter-spacing: -0.02em;
-  --text-stat: 30px;
+  --text-stat: 26px;
   --text-stat--line-height: 1;
   --text-stat--letter-spacing: -0.02em;
+
+  --text-intro: 17px;
+  --text-intro--line-height: 1.5;
   --text-card: 22px;
   --text-card--line-height: 1.2;
   --text-card--letter-spacing: -0.02em;
@@ -91,8 +79,6 @@
 
   --spacing: 4px;
 
-  /* Zero radius everywhere, on purpose. Zeroing these makes any stray
-     rounded-* utility a no-op — but the rule is simply: don't use them. */
   --radius-none: 0px;
   --radius-xs: 0px;
   --radius-sm: 0px;
@@ -104,6 +90,8 @@
   --radius-full: 0px;
 
   --container-page: 1360px;
+
+  --shadow-md: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent);
 }
 
 @layer base {
@@ -129,7 +117,6 @@
     text-decoration: underline;
   }
 
-  /* Themed focus, never the browser default blue. */
   :focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
@@ -145,49 +132,176 @@
 }
 
 @layer components {
-  /* Party rule on hover — see the @theme note. Text always carries the
-     meaning; this is a secondary cue only. */
+
   .p-rep, .p-dem, .p-oth { transition: border-color .12s, box-shadow .12s; }
   .p-rep:hover { border-color: var(--color-party-rep); box-shadow: inset 0 -3px 0 var(--color-party-rep); }
   .p-dem:hover { border-color: var(--color-party-dem); box-shadow: inset 0 -3px 0 var(--color-party-dem); }
   .p-oth:hover { border-color: var(--color-party-other); box-shadow: inset 0 -3px 0 var(--color-party-other); }
 
-  /* Photographs print in pure black and white. Never tint imagery. */
   .grayscale-print { filter: grayscale(1) contrast(1.08); }
 
-  /* The page measure. */
   .shell {
     max-width: var(--container-page);
     margin-inline: auto;
     padding-inline: clamp(16px, 4vw, 32px);
   }
 
-  /* A strong 2px rule between major sections — never softened to a hairline. */
   .rule { border-top: 2px solid var(--color-divider); }
 
-  /* Filter chip. Selected state is an accent fill; unselected is ink on ground. */
+  .muted { color: color-mix(in srgb, var(--color-ink) 70%, transparent); }
+  .muted-55 { color: color-mix(in srgb, var(--color-ink) 55%, transparent); }
+  .muted-76 { color: color-mix(in srgb, var(--color-ink) 76%, transparent); }
+
   .chip {
     display: inline-flex;
     align-items: center;
-    border: 2px solid var(--color-ink);
-    padding: 7px 11px;
-    font-size: 13px;
-    font-weight: 600;
+    border: 1px solid var(--color-divider);
+    padding: 8px 11px;
+    font-size: 12px;
+    font-weight: 500;
     line-height: 1.2;
     background: transparent;
     color: var(--color-ink);
     cursor: pointer;
+    text-align: left;
   }
-  .chip:hover { background: var(--color-accent-100); }
+  .chip:hover { background: color-mix(in srgb, var(--color-ink) 8%, transparent); }
   .chip[aria-pressed='true'] {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: #fff;
+    color: var(--color-bg);
+    font-weight: 600;
   }
 
-  /* Compare table cells size type off their own column, not the viewport.
-     vw units don't know a column got narrow and will break names mid-word.
-     An element can't query itself, so the clamped text needs an inner span. */
+  .seat-sm, .seat-lg { display: inline-flex; align-items: baseline; white-space: nowrap; }
+  .seat-sm { gap: 5px; border: 1px solid var(--color-ink); padding: 2px 8px; line-height: 1.3; }
+  .seat-lg { gap: 8px; border: 2px solid var(--color-ink); padding: 5px 12px; }
+
+  .race-row {
+    display: block; width: 100%; text-align: left;
+    border: 0; border-top: 1px solid var(--color-divider);
+    background: transparent; cursor: pointer; font: inherit; color: inherit;
+  }
+  .race-row:hover { background: color-mix(in srgb, var(--color-ink) 4%, transparent); }
+
+  .cand-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid var(--color-divider);
+    padding: 4px 10px 4px 4px;
+    background: var(--color-bg);
+  }
+  .mono {
+    display: flex; align-items: center; justify-content: center; flex: none;
+    background: color-mix(in srgb, var(--color-ink) 12%, transparent);
+    font-family: var(--font-heading); font-weight: 800;
+  }
+
+  .tag {
+    font-size: 11px; font-weight: 600; letter-spacing: .04em;
+    padding: 3px 7px; border: 1px solid var(--color-divider); white-space: nowrap;
+  }
+  .tag-accent { border-color: var(--color-accent); color: var(--color-accent-700); font-weight: 700; }
+  .tag-solid { border-color: var(--color-ink); background: var(--color-ink); color: var(--color-bg); font-weight: 700; }
+
+  .out-arrow { display: inline-block; vertical-align: -1px; margin-left: 4px; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    cursor: pointer; text-decoration: none;
+    font-family: var(--font-heading); font-weight: 800; font-size: 14px; line-height: 1.2;
+    color: var(--color-ink); background: transparent;
+    border: 1px solid transparent; padding: 8px 14px;
+  }
+  .btn svg { display: block; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-primary { background: var(--color-accent); color: var(--color-bg); }
+  .btn-primary:hover { background: var(--color-accent-600); }
+  .btn-primary:active { background: var(--color-accent-700); }
+  .btn-secondary { border-color: var(--color-divider); }
+  .btn-secondary:hover { background: color-mix(in srgb, var(--color-ink) 7%, transparent); }
+  .btn-secondary:active { background: color-mix(in srgb, var(--color-ink) 14%, transparent); }
+
+  .btn-block { width: 100%; margin-top: 4px; justify-content: flex-start; text-align: left; }
+
+  .cmp-tray {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    border-top: 2px solid var(--color-ink); background: var(--color-bg);
+  }
+
+  /* Marking a choice on your own ballot. Same chip as the index, made
+     selectable — a real radio underneath, so it is keyboard- and
+     screen-reader-operable and one choice per race is enforced by the
+     browser rather than by script. The checked state is the accent, never a
+     party colour: this is the reader's mark, not the site's. */
+  .pick {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid var(--color-divider);
+    padding: 4px 10px 4px 4px;
+    background: var(--color-bg); cursor: pointer;
+    position: relative;
+  }
+  .pick:hover { background: var(--color-accent-100); }
+  .pick input { position: absolute; width: 1px; height: 1px; opacity: 0; margin: 0; }
+  .pick:has(input:checked) {
+    border-color: var(--color-accent);
+    background: var(--color-accent-100);
+    box-shadow: inset 0 -3px 0 var(--color-accent);
+  }
+  .pick:has(input:checked) .mono { background: var(--color-accent); color: var(--color-bg); }
+  /* The radio is visually hidden, so its focus ring has to be borrowed. */
+  .pick:has(input:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  .pick-clear { border: 0; background: transparent; padding: 0 4px; cursor: pointer; }
+
+  .search-field:focus-visible {
+    outline: none;
+    border-color: var(--color-accent-700);
+    box-shadow: inset 0 0 0 1px var(--color-accent-700);
+  }
+  .search-field::placeholder { color: color-mix(in srgb, var(--color-ink) 55%, transparent); }
+
+  .dd-native { display: none; }
+  @media (max-width: 640px) {
+    .dd-native { display: block; }
+    .dd-custom { display: none; }
+  }
+
+  .dd-trigger {
+    width: 100%; min-height: 44px;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    font-family: var(--font-body); font-size: 15px; text-align: left;
+    border: 2px solid var(--color-ink); background: transparent; color: var(--color-ink);
+    padding: 8px 10px 8px 12px; cursor: pointer;
+  }
+  .dd-trigger:hover { background: var(--color-accent-100); }
+  .dd-trigger[disabled] { opacity: .5; cursor: not-allowed; }
+  .dd-trigger[disabled]:hover { background: transparent; }
+  .dd-trigger > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .dd-panel {
+    position: absolute; z-index: 60; top: calc(100% + 4px); left: 0; right: 0;
+    border: 2px solid var(--color-ink); background: var(--color-bg);
+    box-shadow: var(--shadow-md);
+    display: flex; flex-direction: column; max-height: 340px;
+  }
+  .dd-search-row {
+    padding: 10px; display: flex; align-items: center; gap: 8px;
+    border-bottom: 2px solid var(--color-divider);
+  }
+  .dd-search {
+    flex: 1; min-width: 0; font-family: var(--font-body); font-size: 14px;
+    border: 0; background: transparent; color: var(--color-ink); padding: 2px 0; outline: none;
+  }
+  .dd-list { overflow-y: auto; flex: 1; outline: none; }
+
+  .dd-option {
+    width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    text-align: left; font-family: var(--font-body); font-size: 14px; line-height: 1.35;
+    padding: 10px 12px; border: 0; border-bottom: 1px solid var(--color-divider);
+    background: transparent; color: var(--color-ink); cursor: pointer;
+  }
+  .dd-option > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dd-option:hover, .dd-option[data-active='true'] { background: var(--color-accent-100); }
+
   .cmp-cell { container-type: inline-size; min-width: 0; }
   .cmp-name { font-size: clamp(14px, 11cqw, 22px); line-height: 1.15; letter-spacing: -0.02em; }
   .cmp-value { font-size: clamp(12px, 4.6cqw, 15px); line-height: 1.5; }

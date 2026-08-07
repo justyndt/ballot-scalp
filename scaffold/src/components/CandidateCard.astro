@@ -1,0 +1,105 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { Candidate } from '../content.config';
+import { initials, partyAbbr, partyFull, partyRuleClass, proofRows, formatDate } from '../lib/derive';
+
+interface Props {
+  candidate: Candidate;
+  office: string;
+  withdrawn?: boolean;
+  inactiveLabel?: string;
+}
+const { candidate: c, office, withdrawn = false, inactiveLabel } = Astro.props;
+
+const rows = proofRows(c, { office });
+const party = partyFull(c.party);
+
+const showWriteIn = c.writeIn && partyAbbr(c.party) !== 'WRI';
+const statusTag = inactiveLabel
+  ?? (withdrawn
+    ? `Withdrew ${formatDate(c.withdrew ?? null) ?? 'before the deadline'}`
+    : null);
+const hasRunningMate = /Lieutenant Governor/.test(office) && !!c.runningMate;
+---
+
+<article
+  class={`flex flex-col ${withdrawn ? '' : partyRuleClass(c.party)}`}
+  style={withdrawn
+    ? 'border:1px dashed color-mix(in srgb, var(--color-ink) 45%, transparent);background:transparent;opacity:.82'
+    : 'border:2px solid var(--color-ink);background:var(--color-bg)'}
+>
+  <div class="flex" style="border-bottom:1px solid var(--color-divider)">
+
+    <span
+      class="mono size-24 font-heading text-[26px]"
+      style={`border-right:1px solid var(--color-divider);${withdrawn ? 'background:color-mix(in srgb, var(--color-ink) 8%, transparent);color:color-mix(in srgb, var(--color-ink) 70%, transparent)' : ''}`}
+      aria-hidden="true"
+    >{initials(c.name)}</span>
+
+    <div class="flex min-w-0 flex-col justify-center gap-1.5 px-3.5 py-3">
+      <div>
+        {!withdrawn && c.incumbent === true && (
+          <div class="mb-0.5 text-micro font-semibold tracking-[0.04em] text-accent-700">Incumbent</div>
+        )}
+        <div class="font-heading text-[17px] font-extrabold leading-[1.15] tracking-[-0.02em]">{c.name}</div>
+      </div>
+      {hasRunningMate && (
+        <div class="muted text-label leading-[1.4] break-words">Running mate: {c.runningMate}</div>
+      )}
+      <div class="flex flex-wrap gap-[5px]">
+        {statusTag && <span class="tag tag-solid">{statusTag}</span>}
+        <span class="tag">{party}</span>
+        {!withdrawn && showWriteIn && <span class="tag" style="font-weight:700">Write-in</span>}
+      </div>
+    </div>
+  </div>
+
+  <div class="flex-1 p-3.5">
+    <div class="muted mb-2.5 text-micro">{withdrawn ? 'What the record shows' : 'Proof of candidacy'}</div>
+
+    <dl class="m-0 grid gap-x-3.5 gap-y-[7px] text-meta" style="grid-template-columns:auto 1fr">
+      {rows.map((row) => (
+        <>
+          <dt class="muted whitespace-nowrap">{row.label}</dt>
+          <dd class="m-0 text-right font-semibold">{row.value}</dd>
+        </>
+      ))}
+    </dl>
+  </div>
+
+  <div class="flex flex-col gap-2 px-3.5 py-3" style="border-top:1px solid var(--color-divider)">
+    {!withdrawn && (c.website
+      ? (
+        <a href={c.website} target="_blank" rel="noopener" class="text-meta font-semibold">
+          Campaign <span class="whitespace-nowrap">website<Icon name="lucide:arrow-up-right" width={14} height={14} class="out-arrow" /></span>
+        </a>
+      )
+      : <span class="muted text-label">No campaign website on file</span>
+    )}
+    <div class="flex flex-wrap gap-x-3.5 gap-y-2">
+      <a href={c.recordUrl} target="_blank" rel="noopener" class="text-meta font-semibold">
+        Official <span class="whitespace-nowrap">record<Icon name="lucide:arrow-up-right" width={14} height={14} class="out-arrow" /></span>
+      </a>
+      {!withdrawn && c.financeUrl && (
+        <a href={c.financeUrl} target="_blank" rel="noopener" class="text-meta font-semibold">
+          Finance <span class="whitespace-nowrap">reports<Icon name="lucide:arrow-up-right" width={14} height={14} class="out-arrow" /></span>
+        </a>
+      )}
+    </div>
+
+    {!withdrawn && (
+      <button
+        type="button"
+        class="btn btn-secondary btn-block"
+        data-compare-add={c.id}
+        data-compare-name={c.name}
+        aria-pressed="false"
+      >
+
+        <span data-compare-plus class="flex-none"><Icon name="lucide:plus" width={15} height={15} /></span>
+        <span data-compare-check hidden class="flex-none"><Icon name="lucide:check" width={15} height={15} /></span>
+        <span data-compare-label>Add to compare</span>
+      </button>
+    )}
+  </div>
+</article>

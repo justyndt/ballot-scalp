@@ -1,0 +1,57 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { seatParts, fieldLabel, electionLabel, activeCandidates, partyAbbr, initials } from '../lib/derive';
+
+interface Props { race: CollectionEntry<'races'> }
+const { race } = Astro.props;
+const r = race.data;
+const seat = seatParts(r.seat);
+const candidates = activeCandidates(r);
+---
+<!-- Not one big <a> any more: the row now holds a radio group, and form
+     controls inside a link are neither valid nor operable. The office title
+     carries the link instead. -->
+<div class="race-row py-4" data-race-pick={race.id}>
+  <div
+    class="grid items-baseline gap-x-6 gap-y-3"
+    style="grid-template-columns:repeat(auto-fit,minmax(min(160px,100%),1fr))"
+  >
+    <div class="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1.5">
+      <a href={`/race/${race.id}`} class="font-heading text-[18px] font-extrabold leading-[1.2] tracking-[-0.02em] text-ink no-underline hover:text-accent">{r.office}</a>
+      {seat.has && !seat.plain && (
+        <span class="seat-sm">
+          <span class="muted text-micro">{seat.word}</span>
+          <span class="font-heading text-[15px] font-extrabold tracking-[-0.01em]">{seat.num}</span>
+        </span>
+      )}
+      {seat.has && seat.plain && (
+        <span class="seat-sm muted text-micro leading-[1.3]" style="padding:3px 8px">{seat.label}</span>
+      )}
+    </div>
+    <div class="muted text-meta">{fieldLabel(r)}</div>
+    <div class="text-label font-bold tracking-[0.05em]">{electionLabel(r)}</div>
+  </div>
+
+  {candidates.length > 0 && (
+    <fieldset class="mt-3 border-0 p-0">
+      <legend class="sr-only">Your choice for {r.office}</legend>
+      <div class="flex flex-wrap items-center gap-2">
+        {/* Alphabetical by last name, exactly as everywhere else. Marking a
+            choice is the reader's own act — the order never suggests one. */}
+        {candidates.map((c) => (
+          <label class="pick">
+            <input type="radio" name={`pick-${race.id}`} value={c.id} data-pick data-pick-name={c.name} data-pick-party={partyAbbr(c.party)} />
+            <span class="mono size-[26px] text-[10px]" aria-hidden="true">{initials(c.name)}</span>
+            <span class="whitespace-nowrap text-meta font-semibold">{c.name}</span>
+            <span class="muted whitespace-nowrap text-micro">{partyAbbr(c.party)}</span>
+          </label>
+        ))}
+        <!-- A radio group cannot be unset by clicking, so undo needs its own
+             control. Hidden until there is something to undo. -->
+        <button type="button" class="pick-clear text-label font-semibold text-accent-700 underline" style="text-underline-offset:3px" data-pick-clear={race.id} hidden>
+          Clear
+        </button>
+      </div>
+    </fieldset>
+  )}
+</div>

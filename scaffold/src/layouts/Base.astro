@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+import { Icon } from 'astro-icon/components';
+import Footer from '../components/Footer.astro';
 import { meta } from '../lib/meta';
 
 interface Props { title: string; description?: string }
@@ -23,26 +25,29 @@ const path = Astro.url.pathname;
   <body>
     <a href="#main" class="sr-only focus:not-sr-only">Skip to content</a>
 
-    <header class="rule" style="border-top:0;border-bottom:2px solid var(--color-divider)">
-      <div class="shell flex flex-wrap items-center justify-between gap-4 py-4">
-        <a href="/" class="flex items-center gap-3 no-underline">
-          <span class="block size-8 bg-accent" aria-hidden="true"></span>
-          <span>
-            <span class="block font-heading text-[17px] font-extrabold tracking-[-0.02em] text-ink">{meta.name}</span>
-            <span class="block text-label text-neutral-700">{meta.scope}</span>
+    <header
+      class="sticky top-0 z-20 bg-bg"
+      style="border-bottom:2px solid var(--color-divider)"
+    >
+      <div class="shell flex min-h-16 flex-wrap items-stretch justify-between gap-x-8">
+        <a href="/" class="flex items-center gap-3.5 py-3.5 no-underline">
+          <span class="block size-[26px] flex-none bg-accent" aria-hidden="true"></span>
+          <span class="flex flex-col gap-px">
+            <span class="font-heading text-[16px] font-extrabold leading-none tracking-[-0.02em] text-ink">{meta.name}</span>
+            <span class="muted text-micro leading-none">{meta.scope}</span>
           </span>
         </a>
-        <nav class="flex flex-wrap gap-6" aria-label="Sections">
+        <nav class="flex flex-wrap items-stretch" aria-label="Sections">
           {nav.map((n) => {
             const on = n.href === '/' ? path === '/' || path.startsWith('/race') : path.startsWith(n.href);
             return (
               <a
                 href={n.href}
                 aria-current={on ? 'page' : undefined}
-                class="text-meta font-semibold no-underline"
+                class="flex items-center px-4 font-heading text-[13px] font-extrabold tracking-[0.02em] no-underline"
                 style={on
-                  ? 'color:var(--color-accent);box-shadow:inset 0 -3px 0 var(--color-accent);padding-bottom:6px'
-                  : 'color:var(--color-ink)'}
+                  ? 'color:var(--color-accent);border-bottom:3px solid var(--color-accent)'
+                  : 'color:var(--color-ink);border-bottom:3px solid transparent'}
               >{n.label}</a>
             );
           })}
@@ -52,8 +57,70 @@ const path = Astro.url.pathname;
 
     <main id="main"><slot /></main>
 
-    <!-- Footer carries the disclaimer, sources, known gaps and the photo note.
-         All of it comes from meta — see README § Screens. -->
-    <slot name="footer" />
+    <div class="cmp-tray" id="cmp-tray" hidden>
+      <div class="shell flex flex-wrap items-center justify-between gap-x-6 gap-y-3" style="padding-block:14px">
+        <div class="text-[14px] font-semibold" id="cmp-tray-label"></div>
+        <div class="flex gap-2.5">
+          <button type="button" class="btn btn-secondary" id="cmp-tray-clear">Clear</button>
+          <a href="/compare" class="btn btn-primary" id="cmp-tray-go">
+            Compare <Icon name="lucide:arrow-right" width={16} height={16} />
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <slot name="footer"><Footer /></slot>
+
+    <script>
+      import { readSlots, writeSlots, toggle, count, announce, COMPARE_EVENT, COMPARE_KEY }
+        from '../lib/compare-store';
+
+      const tray = document.getElementById('cmp-tray');
+      const trayLabel = document.getElementById('cmp-tray-label');
+
+      const onComparePage = location.pathname.replace(/\/$/, '') === '/compare';
+
+      function paint() {
+        const slots = readSlots();
+        const n = count(slots);
+
+        document.querySelectorAll<HTMLButtonElement>('[data-compare-add]').forEach((btn) => {
+          const id = btn.getAttribute('data-compare-add');
+          const on = slots[0] === id || slots[1] === id;
+          btn.setAttribute('aria-pressed', String(on));
+          const plus = btn.querySelector<HTMLElement>('[data-compare-plus]');
+          const check = btn.querySelector<HTMLElement>('[data-compare-check]');
+          const label = btn.querySelector<HTMLElement>('[data-compare-label]');
+          if (plus) plus.hidden = on;
+          if (check) check.hidden = !on;
+          if (label) label.textContent = on ? 'In comparison' : 'Add to compare';
+        });
+
+        if (tray) tray.hidden = onComparePage || n === 0;
+        if (trayLabel) {
+          trayLabel.textContent = n === 1
+            ? '1 candidate selected. Pick one more'
+            : '2 candidates selected';
+        }
+      }
+
+      document.addEventListener('click', (e) => {
+        const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-compare-add]');
+        if (!btn) return;
+        const id = btn.getAttribute('data-compare-add');
+        if (!id) return;
+        writeSlots(toggle(readSlots(), id));
+        announce();
+      });
+
+      document.getElementById('cmp-tray-clear')?.addEventListener('click', () => {
+        writeSlots([null, null]);
+        announce();
+      });
+
+      window.addEventListener('storage', (e) => { if (e.key === COMPARE_KEY) paint(); });
+      document.addEventListener(COMPARE_EVENT, paint);
+      paint();
+    </script>
   </body>
 </html>

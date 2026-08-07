@@ -1,4 +1,4 @@
-# Handoff: Ballot Record
+# Handoff: Ballot Scalp
 
 An unbiased, non-partisan record of every 2026 race and candidate on the ballot in Leon and Gadsden County, Florida — with the paperwork that proves each candidate really filed.
 
@@ -19,7 +19,7 @@ The prototype's value is that it settles three things: the **data shape**, the *
 
 Two things are deliberately unfinished and are noted as such in the UI itself:
 
-1. **No candidate has a campaign website.** Neither Supervisor of Elections collects them. `website` is `null` for all 135 candidates and the UI renders "No campaign website on file." Filling these in is a manual research pass, not a code task.
+1. **No candidate has a campaign website.** Neither Supervisor of Elections collects them. `website` is `null` for every candidate and the UI renders "No campaign website on file." Filling these in is a manual research pass, not a code task.
 2. **Portraits are Unsplash placeholders**, identical treatment for every candidate, labelled as placeholders in the footer. Do not swap in real photos of some candidates and not others — unequal imagery is a bias problem, not a content gap.
 
 ---
@@ -40,7 +40,7 @@ This site's only claim is neutrality. These rules are load-bearing; several of t
 
 ## Data
 
-One file: `src/data/races.json`, shape `{ meta, races }`. 52 races, 135 candidates. Every field present on every record (explicit `null` rather than omission) except `pending`, `note`, `runningMate` and `withdrew`.
+One file: `src/data/races.json`, shape `{ meta, races }`. 52 races, 194 candidates. Every field present on every record (explicit `null` rather than omission) except `pending`, `note`, `runningMate` and `withdrew`. DOS statewide/federal/judicial rows sync from `data/CandidateList.txt` via `scripts/sync-dos-candidates.py` ([Division of Elections download](https://dos.elections.myflorida.com/candidates/downloadcanlist.asp)).
 
 ### Why it is one file with a `parser`
 
@@ -71,21 +71,22 @@ Astro's `file()` loader expects an array at the top level. `races.json` is an ob
 | Field | Type | Notes |
 | --- | --- | --- |
 | `id`, `name` | string | |
-| `party` | enum \| null | Democrat, Republican, No Party Affiliation, Libertarian, Write-In, "Nonpartisan office", or `null` = not stated |
+| `party` | enum \| null | Democrat, Republican, No Party Affiliation, Libertarian, Write-In, Nonpartisan office, Independent Party of Florida, Constitution Party of Florida, or `null` = not stated |
 | `incumbent`, `writeIn` | boolean | |
-| `status` | enum | Qualified / Qualified, unopposed primary / Unopposed, elected / On the ballot for retention / Elected without opposition / Withdrew |
+| `status` | enum | Qualified / Qualified, unopposed primary / Unopposed, elected / On the ballot for retention / Elected without opposition / Withdrew / Did not qualify |
 | `qualified` | ISO date \| null | **The proof of legitimacy** — the filing date |
 | `announced`, `petitionMet` | ISO date \| null | |
 | `qualifyingMethod` | string \| null | Fee paid vs. petition |
-| `treasurer`, `treasurerFiled` | string / ISO \| null | Gadsden publishes these; Leon does not |
+| `treasurer`, `treasurerFiled` | string / ISO \| null | Gadsden publishes both; Leon's candidate list publishes treasurer names (and contact) for many local rows, not treasurer-filed dates |
 | `email`, `phone` | string \| null | |
-| `website` | string \| null | **`null` for all 135** — see above |
+| `website` | string \| null | **`null` for all** — see above |
 | `note` | string? | Race-specific context |
 | `photo` | URL | Unsplash placeholder, `?w=320&h=320&fit=crop&crop=faces` |
 | `recordUrl` | URL | The official record for this candidate |
-| `financeUrl`, `financeTotal` | URL / number \| null | |
-| `runningMate` | string? | Only Governor tickets (2 of 29 candidates) |
-| `withdrew` | ISO date? | 1 candidate |
+| `financeUrl` | URL \| null | Where the office's finance reports live |
+| `financeRaised`, `financeInKind`, `financeSpent` | number \| null | Three figures, not one total — the office reports them separately. `null` = the candidate files with an office we don't index; `financeUrl` points there |
+| `runningMate` | string? | Only Governor tickets (named running mates where the Division of Elections lists one) |
+| `withdrew` | ISO date? | Present when the record publishes a withdraw date |
 
 ### meta
 
@@ -153,7 +154,7 @@ Two candidate slots, each a searchable dropdown; a shared label column and one c
 
 | Behavior | Detail |
 | --- | --- |
-| Search | Matches candidate name, office, seat, jurisdiction, district, party. Instant, client-side, no debounce needed at 135 rows. |
+| Search | Matches candidate name, office, seat, jurisdiction, district, party. Instant, client-side, no debounce needed at 139 rows. |
 | **Empty search fallback** | If nothing matches, check the query against `meta.notUpThisCycle.offices` and answer directly — "Superintendent of Schools has no 2026 election" plus the reason. Suppress the generic "no races match" copy when a specific answer exists, or the two contradict each other. This is why searching "sheriff" returns an explanation instead of a blank. |
 | Filters | Multi-select within a group (OR), AND across groups. "Clear all" appears only when a filter is active. |
 | Navigation | Every view change resets scroll to top **after** the state commits — window, `document.scrollingElement`, and any scrollable ancestor, on the current frame and the next. In Astro, real page routes give you this free; keep it in mind for any client-side filtering that re-renders. |
@@ -165,7 +166,7 @@ Two candidate slots, each a searchable dropdown; a shared label column and one c
 
 ### Client-side JS
 
-Given static data and 135 rows, plain `<script>` modules in Astro are enough — no UI framework. Filtering is a DOM class toggle over pre-rendered cards, which also means **the full list is in the HTML for search engines and for users with JS off.** Render every race server-side and filter by hiding; do not render the list from JS. If compare/ballot grow real complexity, add a Preact island for just those two rather than adopting a framework site-wide.
+Given static data and 139 rows, plain `<script>` modules in Astro are enough — no UI framework. Filtering is a DOM class toggle over pre-rendered cards, which also means **the full list is in the HTML for search engines and for users with JS off.** Render every race server-side and filter by hiding; do not render the list from JS. If compare/ballot grow real complexity, add a Preact island for just those two rather than adopting a framework site-wide.
 
 ---
 
@@ -254,7 +255,7 @@ Outbound links put the arrow inline at the end of the text so it sits on the **l
 ```
 README.md                              This document
 CLAUDE.md                              Working instructions for Claude Code
-data/races.json                        The data artifact — 52 races, 135 candidates
+data/races.json                        The data artifact — 52 races, 139 candidates
 design-reference/Ballot Record.dc.html The HTML prototype (reference only)
 design-reference/styles.css            Modernist design-system tokens
 scaffold/                              Astro 5 + Tailwind 4 + Iconify starting point

@@ -1,0 +1,177 @@
+---
+import { getCollection } from 'astro:content';
+import { Icon } from 'astro-icon/components';
+import Base from '../../layouts/Base.astro';
+import CandidateCard from '../../components/CandidateCard.astro';
+import { meta, sourceById } from '../../lib/meta';
+import {
+  activeCandidates, withdrawnCandidates, didNotQualifyCandidates,
+  seatParts, fieldLabel, electionLabel,
+  incumbencyFact, formatShort, orElse, partyFull,
+  NOT_PUBLISHED,
+} from '../../lib/derive';
+
+export async function getStaticPaths() {
+  const races = await getCollection('races');
+  return races.map((race) => ({ params: { id: race.id }, props: { race } }));
+}
+
+const { race } = Astro.props;
+const r = race.data;
+const candidates = activeCandidates(r);
+const withdrawn = withdrawnCandidates(r);
+const didNotQualify = didNotQualifyCandidates(r);
+const source = sourceById(r.source);
+const seat = seatParts(r.seat);
+
+const breadcrumb = [
+  r.counties.join(' + ') + (r.counties.length > 1 ? '' : ' County'),
+  r.level,
+].join('  ·  ');
+
+const facts = [
+  { label: 'County', value: r.counties.join(' & ') },
+  { label: 'Election', value: electionLabel(r) },
+  { label: 'Field', value: fieldLabel(r) },
+
+  { label: 'Seat', value: incumbencyFact(r) },
+];
+
+const candidateHeading = candidates.length === 1
+  ? 'The one candidate still running'
+  : 'Everyone still running';
+
+const withdrawnHeading = withdrawn.length === 1
+  ? 'One candidate withdrew'
+  : `${withdrawn.length} candidates withdrew`;
+
+const didNotQualifyHeading = didNotQualify.length === 1
+  ? 'One candidate did not qualify'
+  : `${didNotQualify.length} candidates did not qualify`;
+
+const emptyTitle = r.pending ? meta.emptyRace.pendingTitle : meta.emptyRace.noneTitle;
+const emptyBody = r.pending ? meta.emptyRace.pendingBody : meta.emptyRace.noneBody;
+
+const heldByParty = r.heldBy.party
+  ? partyFull(r.heldBy.party)
+  : (r.heldBy.name
+      ? 'Party not stated in the record'
+      : 'This office has no published seat holder in the records we index.');
+---
+<Base title={r.office} description={r.ballotNote}>
+  <div class="shell">
+    <div class="pt-5">
+      <a href="/" class="text-meta font-semibold text-accent-700 underline" style="text-underline-offset:3px">← All races</a>
+    </div>
+
+    <header class="pb-6 pt-3.5" style="border-bottom:2px solid var(--color-divider)">
+      <div class="mb-2.5 text-label text-accent-700">{breadcrumb}</div>
+      <h1 class="max-w-[22ch] text-title">{r.office}</h1>
+
+      <div class="mt-3.5 flex flex-wrap items-center gap-x-3.5 gap-y-2.5">
+        {seat.has && !seat.plain && (
+          <span class="seat-lg">
+            <span class="muted text-meta">{seat.word}</span>
+            <span class="font-heading text-[20px] font-extrabold leading-none tracking-[-0.02em]">{seat.num}</span>
+          </span>
+        )}
+        {seat.has && seat.plain && (
+          <span class="seat-lg muted text-meta" style="padding:6px 12px">{seat.label}</span>
+        )}
+        <span class="muted text-[16px]">{r.jurisdiction}</span>
+      </div>
+    </header>
+
+    <div class="overflow-hidden" style="border-bottom:2px solid var(--color-divider)">
+      <div
+        class="grid"
+        style="grid-template-columns:repeat(auto-fit,minmax(min(158px,100%),1fr));margin:-1px 0 0 -26px;width:calc(100% + 27px)"
+      >
+        {facts.map((f) => (
+          <div
+            class="min-w-0"
+            style="padding:18px 26px 20px;border-top:1px solid var(--color-divider);box-shadow:1px 0 0 0 var(--color-divider)"
+          >
+            <div class="muted mb-[7px] text-micro">{f.label}</div>
+            <div class="font-heading text-[17px] font-extrabold leading-[1.25] tracking-[-0.01em]">{f.value}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-start gap-x-12 gap-y-8 pb-16 pt-7">
+      <div class="min-w-0 flex-[999_1_420px]">
+        <div class="mb-8 bg-accent-100 px-5 py-4" style="border-left:3px solid var(--color-accent)">
+          <div class="mb-1.5 text-micro text-accent-700">How this seat is decided</div>
+          <p class="text-dense text-accent-900">{r.ballotNote}</p>
+        </div>
+
+        {candidates.length > 0 && (
+          <>
+            <h2 class="mb-1 text-label font-normal tracking-[0.01em]">{candidateHeading}</h2>
+            <p class="muted mb-5 text-meta">Listed alphabetically by last name.</p>
+            <div class="grid gap-6" style="grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr))">
+              {candidates.map((c) => <CandidateCard candidate={c} office={r.office} />)}
+            </div>
+          </>
+        )}
+
+        {candidates.length === 0 && (
+          <div style="border:2px solid var(--color-divider);padding:32px">
+            <div class="mb-2 font-heading text-[20px] font-extrabold">{emptyTitle}</div>
+            <p class="muted mb-4 max-w-[48ch] text-value">{emptyBody}</p>
+            {source && (
+              <a href={source.url} target="_blank" rel="noopener" class="text-value font-semibold">
+                Check the Supervisor of Elections <span class="whitespace-nowrap">record<Icon name="lucide:arrow-up-right" width={14} height={14} class="out-arrow" /></span>
+              </a>
+            )}
+          </div>
+        )}
+
+        {withdrawn.length > 0 && (
+          <div class="mt-10 pt-6" style="border-top:2px solid var(--color-divider)">
+            <h2 class="mb-1 text-label font-normal tracking-[0.01em]">{withdrawnHeading}</h2>
+            <p class="muted mb-5 max-w-[56ch] text-meta">
+              Listed for the record only. These names are not on the ballot and are not counted in the field above.
+            </p>
+            <div class="grid gap-6" style="grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr))">
+              {withdrawn.map((c) => <CandidateCard candidate={c} office={r.office} withdrawn />)}
+            </div>
+          </div>
+        )}
+
+        {didNotQualify.length > 0 && (
+          <div class="mt-10 pt-6" style="border-top:2px solid var(--color-divider)">
+            <h2 class="mb-1 text-label font-normal tracking-[0.01em]">{didNotQualifyHeading}</h2>
+            <p class="muted mb-5 max-w-[56ch] text-meta">
+              Listed for the record only. These names filed but did not complete qualifying, so they are not on the ballot and are not counted in the field above.
+            </p>
+            <div class="grid gap-6" style="grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr))">
+              {didNotQualify.map((c) => <CandidateCard candidate={c} office={r.office} withdrawn inactiveLabel="Did not qualify" />)}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <aside class="flex-[1_1_300px] p-[22px]" style="border:2px solid var(--color-ink)">
+        <div class="muted mb-2.5 text-micro">Currently holds this seat</div>
+        <div class="mb-2 font-heading text-[24px] font-extrabold leading-[1.1] tracking-[-0.02em]">
+          {orElse(r.heldBy.name, NOT_PUBLISHED)}
+        </div>
+        <div class="muted mb-3.5 text-meta">{heldByParty}</div>
+        {r.heldBy.note && (
+          <p class="mb-3.5 bg-accent-100 px-3 py-2.5 text-meta leading-[1.5] text-accent-900">{r.heldBy.note}</p>
+        )}
+        <div class="pt-3.5" style="border-top:1px solid var(--color-divider)">
+          <div class="muted mb-2 text-micro">Source of record</div>
+          {source && (
+            <a href={source.url} target="_blank" rel="noopener" class="block text-meta font-semibold leading-[1.4]">
+              {source.label}<span class="whitespace-nowrap"><Icon name="lucide:arrow-up-right" width={13} height={13} class="out-arrow" /></span>
+            </a>
+          )}
+          <div class="muted mt-2.5 text-label">Checked {formatShort(meta.lastVerified)}</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Base>

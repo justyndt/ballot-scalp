@@ -1,11 +1,5 @@
 import data from '../data/races.json';
 
-/* meta carries everything that would otherwise be hardcoded geography or
-   prose: the counties, the elections offices, the calendar, the
-   closed-primary explainer, the disclaimer. Adding a county is a regions
-   entry plus its races. Adding a state means swapping meta wholesale —
-   the closed-primary explainer is Florida law, not a component. */
-
 export interface Region {
   id: string;
   name: string;

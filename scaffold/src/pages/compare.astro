@@ -1,0 +1,232 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Dropdown from '../components/Dropdown.astro';
+import { meta } from '../lib/meta';
+import {
+  activeCandidates, lastName, partyAbbr, partyFull, initials, formatDate, formatShort,
+  orElse, petitionFact, electionLabel, officeText, NOT_PUBLISHED, NO_WEBSITE,
+} from '../lib/derive';
+import { jsonIsland } from '../lib/embed';
+
+const races = await getCollection('races');
+
+const FIELDS = [
+  'Name on ballot', 'Office sought', 'Where', 'Party', 'Incumbent',
+  'Qualifying status', 'Date qualified', 'Qualifying method',
+  'Petition requirement met', 'Campaign treasurer', 'Treasurer filed',
+  'Campaign website', 'Election date',
+] as const;
+
+function incumbency(v: boolean | null): string {
+  if (v === true) return 'Yes';
+  if (v === false) return 'No';
+  return NOT_PUBLISHED;
+}
+
+const options = races
+  .flatMap((race) =>
+    activeCandidates(race.data).map((c) => ({
+      id: c.id,
+      name: c.name,
+      initials: initials(c.name),
+      party: partyAbbr(c.party),
+      race: race.data.office,
+      raceId: race.id,
+
+      search: [c.name, race.data.office, race.data.seat, race.data.jurisdiction, partyAbbr(c.party)]
+        .join(' ')
+        .toLowerCase(),
+      values: [
+        c.name,
+        officeText(race.data),
+        race.data.jurisdiction,
+        partyFull(c.party, 'Not stated in the record'),
+        incumbency(c.incumbent),
+        c.status,
+        orElse(formatDate(c.qualified), NOT_PUBLISHED),
+        orElse(c.qualifyingMethod),
+
+        petitionFact(c, NOT_PUBLISHED),
+        orElse(c.treasurer),
+        orElse(formatDate(c.treasurerFiled)),
+        c.website ?? NO_WEBSITE,
+        electionLabel(race.data),
+      ],
+      links: {
+        'Campaign website': c.website,
+        'Office sought': `/race/${race.id}`,
+      } as Record<string, string | null>,
+      election: electionLabel(race.data),
+    })),
+  )
+
+  .sort((a, b) => lastName(a.name).localeCompare(lastName(b.name)));
+
+const slots = [0, 1];
+---
+<Base title="Compare candidates" description="Put two candidates side by side on the same public record.">
+  <div class="shell">
+    <header class="pb-7 pt-14" style="border-bottom:2px solid var(--color-divider)">
+      <h1 class="mb-3.5 max-w-[20ch] text-title">Compare two candidates</h1>
+      <p class="max-w-[56ch] text-intro">
+        The same fields for both, in the same order, drawn from the same records. Where an
+        office does not publish something, the row says so rather than staying blank.
+      </p>
+    </header>
+
+    <div>
+
+      <div
+        id="cmp-grid"
+        class="grid"
+        style="grid-template-columns:clamp(70px,18%,200px) minmax(0,1fr) minmax(0,1fr)"
+      >
+
+        <div class="py-5 pr-4" style="border-right:1px solid var(--color-divider)"></div>
+
+        {slots.map((i) => (
+          <div class="cmp-cell px-4 py-5" style="border-right:1px solid var(--color-divider)" data-head={i}>
+
+            <div class="flex flex-wrap items-center gap-2.5">
+              <span
+                class="grid size-[26px] shrink-0 place-items-center bg-surface text-micro font-extrabold"
+                data-mono={i}
+                aria-hidden="true"
+              ></span>
+
+              <span class="font-heading font-extrabold" data-name={i}>
+                <span class="cmp-name">Nobody picked yet</span>
+              </span>
+            </div>
+            <div class="mt-1 muted text-micro" data-sub={i}></div>
+
+            <div class="mt-3">
+              <Dropdown
+                id={`cmp-${i}`}
+                label={`Candidate ${i + 1}`}
+                placeholder="Choose a candidate"
+                showLabel={false}
+                searchable
+                searchPlaceholder="Search candidates…"
+                noMatchText="No candidate matches that."
+                options={options.map((o) => ({ value: o.id, label: `${o.name} · ${o.race}` }))}
+              />
+            </div>
+          </div>
+        ))}
+
+        {FIELDS.map((f, row) => (
+          <>
+            <div
+              class="muted min-w-0 break-words text-label tracking-[0.01em]"
+              style="padding:16px clamp(10px,2vw,24px) 16px 0;border-right:1px solid var(--color-divider);border-top:1px solid var(--color-divider)"
+              data-field={f}
+            >{f}</div>
+            {slots.map((i) => (
+              <div
+                class="cmp-cell"
+                style="padding:16px clamp(12px,3vw,24px);border-right:1px solid var(--color-divider);border-top:1px solid var(--color-divider)"
+                data-cell={`${i}-${row}`}
+              >
+                <span class="cmp-value muted">—</span>
+              </div>
+            ))}
+          </>
+        ))}
+      </div>
+    </div>
+
+    <p class="mt-6 pb-16 muted text-meta">
+      Running mate is not compared here: it applies to the Governor ticket only, and the race
+      page carries it. Verified {formatShort(meta.lastVerified)}.
+    </p>
+  </div>
+
+  <script is:inline type="application/json" id="cmp-data" set:html={jsonIsland(options)}></script>
+</Base>
+
+<script>
+  import { initDropdowns } from '../lib/dropdown';
+  import { readSlots, writeSlots, announce } from '../lib/compare-store';
+
+  initDropdowns();
+
+  interface Opt {
+    id: string; name: string; initials: string; party: string; race: string;
+    raceId: string; search: string; values: string[];
+    links: Record<string, string | null>; election: string;
+  }
+
+  const dataEl = document.getElementById('cmp-data');
+  const grid = document.getElementById('cmp-grid');
+  if (dataEl && grid) {
+    const options: Opt[] = JSON.parse(dataEl.textContent || '[]');
+    const byId = new Map(options.map((o) => [o.id, o]));
+    const picked: (string | null)[] = [null, null];
+
+    const q = <T extends Element>(sel: string) => grid.querySelector<T>(sel);
+    const qa = <T extends Element>(sel: string) => Array.from(grid.querySelectorAll<T>(sel));
+
+    const labels = qa<HTMLElement>('[data-field]').map((el) => el.getAttribute('data-field') || '');
+
+    function paint(slot: number) {
+      const o = picked[slot] ? byId.get(picked[slot] as string) : undefined;
+
+      const mono = q<HTMLElement>(`[data-mono="${slot}"]`);
+      const name = q<HTMLElement>(`[data-name="${slot}"]`);
+      const sub = q<HTMLElement>(`[data-sub="${slot}"]`);
+
+      if (mono) mono.textContent = o ? o.initials : '';
+      if (name) {
+
+        const inner = document.createElement('span');
+        inner.className = 'cmp-name';
+        inner.textContent = o ? o.name : 'Nobody picked yet';
+        name.replaceChildren(inner);
+      }
+      if (sub) sub.textContent = o ? `${o.party} · ${o.election}` : '';
+
+      qa<HTMLElement>(`[data-cell^="${slot}-"]`).forEach((cell) => {
+        const row = Number(cell.getAttribute('data-cell')!.split('-')[1]);
+        const href = o ? o.links[labels[row]] : null;
+
+        const el = document.createElement(href ? 'a' : 'span');
+        el.className = 'cmp-value';
+        if (!o) el.classList.add('muted');
+        if (href) (el as HTMLAnchorElement).href = href;
+        el.textContent = o ? o.values[row] : '—';
+        cell.replaceChildren(el);
+      });
+    }
+
+    [0, 1].forEach((slot) => {
+      document
+        .querySelector<HTMLElement>(`[data-dd="cmp-${slot}"]`)
+        ?.addEventListener('dd:change', (e) => {
+          picked[slot] = (e as CustomEvent).detail.value || null;
+          paint(slot);
+
+          writeSlots([picked[0], picked[1]]);
+          announce();
+        });
+    });
+
+    const stored = readSlots();
+    [0, 1].forEach((slot) => {
+      const id = stored[slot] && byId.has(stored[slot] as string) ? stored[slot] : null;
+      picked[slot] = id;
+      const el = document.querySelector<HTMLElement>(`[data-dd="cmp-${slot}"]`);
+      if (el) {
+
+        el.setAttribute('data-value', id ?? '');
+        el.dispatchEvent(new CustomEvent('dd:setvalue', { detail: { value: id ?? '' } }));
+      }
+      paint(slot);
+    });
+    if (stored[0] !== picked[0] || stored[1] !== picked[1]) {
+      writeSlots([picked[0], picked[1]]);
+      announce();
+    }
+  }
+</script>

@@ -1,0 +1,110 @@
+---
+import { Icon } from 'astro-icon/components';
+import { meta, sources } from '../lib/meta';
+
+const { disclaimer, dataGaps } = meta;
+---
+<footer class="mt-14" style="border-top:2px solid var(--color-divider)">
+  <div class="shell pt-9">
+
+    <div style="border:2px solid var(--color-ink)">
+      <div
+        class="flex items-center gap-[11px]"
+        style="padding:16px clamp(18px,2.4vw,28px);border-bottom:2px solid var(--color-ink)"
+      >
+
+        <Icon name="lucide:triangle-alert" width={22} height={22} class="flex-none" />
+        <div
+          class="font-heading font-extrabold leading-[1.15] tracking-[-0.02em]"
+          style="font-size:clamp(18px,1.7vw,22px)"
+        >{disclaimer.heading}</div>
+      </div>
+
+      <div class="overflow-hidden">
+        <div
+          class="grid"
+          style="grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));width:calc(100% + 2px);margin-left:-1px"
+        >
+          {disclaimer.paras.map((p: { title: string; text: string }) => (
+            <div
+              style="padding:20px clamp(18px,2.4vw,26px);border-left:1px solid var(--color-divider);border-top:1px solid var(--color-divider);margin-top:-1px"
+            >
+              <div class="mb-2 text-meta font-bold tracking-[-0.005em]">{p.title}</div>
+              <p class="muted-76 text-meta leading-[1.6]">{p.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div
+        class="flex flex-wrap items-center gap-x-6 gap-y-2.5"
+        style="border-top:2px solid var(--color-ink);padding:16px clamp(18px,2.4vw,28px)"
+      >
+        <div class="muted text-label">{disclaimer.verifyLabel}</div>
+        <div class="flex flex-wrap gap-x-2.5 gap-y-2">
+          {sources.map((s) => (
+            <a
+              href={s.url}
+              target="_blank"
+              rel="noopener"
+              class="verify-link inline-flex items-center gap-2 text-label font-semibold no-underline"
+              style="border:2px solid var(--color-ink);padding:7px 12px;color:var(--color-ink)"
+            >
+              <span>{s.label}</span>
+              <Icon name="lucide:arrow-up-right" width={12} height={12} class="flex-none" style="opacity:.65" />
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="shell grid gap-x-12 gap-y-8 pb-12 pt-9"
+    style="grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr))"
+  >
+    <div>
+      <div class="mb-2.5 font-heading text-[16px] font-extrabold">Corrections</div>
+      <p class="muted mb-3 max-w-[46ch] text-meta leading-[1.6]">
+        See a mistake? Tell us and we will fix it against the record, not against an opinion.
+        Say which race, which candidate, and which document you are reading.
+      </p>
+      <p class="max-w-[46ch] text-meta leading-[1.6] text-accent-700">{meta.colorNote}</p>
+    </div>
+
+    <div>
+      <div class="muted mb-3 text-micro">Sources</div>
+      <div class="flex flex-col gap-2">
+        {sources.map((s) => (
+          <a href={s.url} target="_blank" rel="noopener" class="text-meta leading-[1.4]">
+            {s.label}<span class="whitespace-nowrap"><Icon name="lucide:arrow-up-right" width={13} height={13} class="out-arrow" /></span>
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <div>
+      <div class="muted mb-3 text-micro">Known gaps</div>
+      <div class="flex flex-col gap-2.5">
+        {dataGaps.map((g: string) => (
+          <p class="muted text-label leading-[1.5]">{g}</p>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid var(--color-divider)">
+    <div class="shell muted flex flex-wrap justify-between gap-x-6 gap-y-2 py-4 text-label">
+      <span>{meta.name} · an independent, non-partisan index · not a government website</span>
+      <span>{meta.photoNote}</span>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .verify-link:hover {
+    background: var(--color-accent-100);
+    border-color: var(--color-accent-700) !important;
+    color: var(--color-accent-700) !important;
+  }
+</style>

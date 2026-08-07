@@ -4,82 +4,109 @@ import { Icon } from 'astro-icon/components';
 import Base from '../layouts/Base.astro';
 import RaceCard from '../components/RaceCard.astro';
 import { meta, regions } from '../lib/meta';
-import { LEVELS } from '../content.config';
-import { deadlineState, formatShort } from '../lib/derive';
+import { LEVELS, PARTIES } from '../content.config';
+import { activeCandidates, deadlineState, formatShort } from '../lib/derive';
+import { jsonIsland } from '../lib/embed';
 
 const entries = await getCollection('races');
 const totalCandidates = entries.reduce((n, e) => n + e.data.candidates.length, 0);
 
-/* Group by level in the canonical order, not data order. */
 const byLevel = LEVELS
   .map((level) => ({ level, races: entries.filter((e) => e.data.level === level) }))
   .filter((g) => g.races.length);
 
 const primary = deadlineState(meta.elections.primary.date);
 
-/* Filter groups are derived from the data and from meta — never a hardcoded
-   county name. Adding a region adds its chip automatically. */
+const partiesPresent = new Set(
+  entries.flatMap((e) => activeCandidates(e.data).map((c) => c.party ?? 'Not stated')),
+);
+const partyOptions = [
+  ...PARTIES.filter((p) => partiesPresent.has(p)),
+  ...(partiesPresent.has('Not stated') ? ['Not stated'] : []),
+];
+
 const filterGroups = [
   { id: 'county', label: 'County', options: regions.map((r) => r.id) },
   { id: 'level', label: 'Race level', options: byLevel.map((g) => g.level) },
-  { id: 'party', label: 'Party', options: ['Democrat', 'Republican', 'No Party Affiliation', 'Libertarian', 'Write-In', 'Not stated'] },
+  { id: 'party', label: 'Party', options: partyOptions },
 ];
 ---
 <Base title="Every race on your ballot">
   <div class="shell">
-    <!-- Masthead -->
-    <div class="flex flex-wrap gap-x-16 gap-y-10 py-14">
-      <div class="min-w-0 flex-[999_1_440px]">
-        <div class="text-label font-semibold text-accent-700">{meta.kicker}</div>
-        <h1 class="mt-2.5 max-w-[20ch] text-hero">Everyone on your ballot. Nothing else.</h1>
-        <p class="mt-5 max-w-[48ch] text-body text-ink">{meta.intro}</p>
+    <div
+      class="grid items-end gap-x-16 gap-y-10"
+      style="grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr));padding:clamp(32px,6vw,56px) 0 40px"
+    >
+      <div>
+        <p class="mb-4 text-label font-semibold tracking-[0.01em] text-accent-700">{meta.kicker}</p>
+        <h1 class="mb-5 max-w-[16ch] text-hero">Everyone on your ballot. Nothing else.</h1>
+        <p class="max-w-[52ch] text-intro">{meta.intro}</p>
       </div>
 
-      <div class="flex-[1_1_320px] self-end">
-        <div class="grid grid-cols-2 gap-x-8 gap-y-6 border-t-2 border-divider pt-6">
-          <div>
-            <div class="text-label text-neutral-700">{meta.elections.primary.label}</div>
-            <div class="mt-1.5 font-heading text-stat">{meta.elections.primary.short}</div>
-            <!-- Derived from the clock on every load, never a stored string. -->
-            <div class="mt-1.5 text-meta font-semibold text-accent-700">{primary.label}</div>
+      <div class="pt-5" style="border-top:2px solid var(--color-divider)">
+        <div class="grid grid-cols-2 gap-x-6" style="row-gap:2px">
+          <div class="pb-4">
+            <div class="muted mb-1.5 text-micro">{meta.elections.primary.label}</div>
+            <div class="font-heading text-stat font-extrabold">{meta.elections.primary.short}</div>
+            <div
+              class="mt-[5px] text-meta font-semibold text-accent-700"
+              id="primary-status"
+              data-date={meta.elections.primary.date}
+            >{primary.label}</div>
           </div>
-          <div>
-            <div class="text-label text-neutral-700">{meta.elections.general.label}</div>
-            <div class="mt-1.5 font-heading text-stat">{meta.elections.general.short}</div>
-            <div class="mt-1.5 text-meta text-neutral-700">{meta.elections.general.note}</div>
+          <div class="pb-4">
+            <div class="muted mb-1.5 text-micro">{meta.elections.general.label}</div>
+            <div class="font-heading text-stat font-extrabold">{meta.elections.general.short}</div>
+            <div class="muted mt-[5px] text-meta">{meta.elections.general.note}</div>
           </div>
-          <div class="border-t-2 border-divider pt-4">
-            <div class="text-label text-neutral-700">{meta.elections.earlyVoting.label}</div>
-            <div class="mt-1 text-dense font-semibold">{meta.elections.earlyVoting.short}</div>
+          <div class="pt-3.5" style="border-top:1px solid var(--color-divider)">
+            <div class="muted mb-1 text-micro">{meta.elections.earlyVoting.label}</div>
+            <div class="text-[14px] font-semibold">{meta.elections.earlyVoting.short}</div>
           </div>
-          <div class="border-t-2 border-divider pt-4">
-            <div class="text-label text-neutral-700">On this page</div>
-            <div class="mt-1 text-dense font-semibold">{entries.length} races · {totalCandidates} candidates</div>
+          <div class="pt-3.5" style="border-top:1px solid var(--color-divider)">
+            <div class="muted mb-1 text-micro">On this page</div>
+            <div class="text-[14px] font-semibold">{entries.length} races · {totalCandidates} candidates</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Body: filter rail + results -->
-    <div class="flex flex-wrap gap-x-10 border-t-2 border-divider">
-      <aside class="flex-[1_1_210px] py-7" aria-label="Filters">
-        <div class="flex items-baseline justify-between gap-3">
-          <h2 class="text-[15px] font-extrabold">Filter</h2>
-          <button type="button" id="clear-filters" hidden class="border-0 bg-transparent p-0 text-label font-semibold text-accent-700 underline">Clear all</button>
-        </div>
-        {filterGroups.map((g) => (
-          <div class="mt-6" data-filter-group={g.id}>
-            <div class="text-micro font-semibold text-neutral-700">{g.label}</div>
-            <div class="mt-2.5 flex flex-wrap gap-2">
-              {g.options.map((o) => (
-                <button type="button" class="chip" aria-pressed="false" data-value={o}>{o}</button>
-              ))}
-            </div>
+    <div class="flex flex-wrap">
+      <aside
+        class="min-w-0 flex-[1_1_236px]"
+        style="border-right:2px solid var(--color-divider);padding:28px 28px 40px 0"
+        aria-label="Filters"
+      >
+        <div class="sticky flex flex-col gap-[26px]" style="top:96px">
+          <div class="flex items-baseline justify-between gap-2">
+            <h2 class="text-label font-normal tracking-[0.01em]">Filter</h2>
+            <button
+              type="button"
+              id="clear-filters"
+              hidden
+              class="cursor-pointer border-0 bg-transparent p-0 text-label font-semibold text-accent-700 underline"
+              style="text-underline-offset:3px"
+            >Clear all</button>
           </div>
-        ))}
+          {filterGroups.map((g) => (
+            <div class="flex flex-col gap-[9px]" data-filter-group={g.id}>
+              <div class="muted text-micro">{g.label}</div>
+              <div class="flex flex-wrap gap-1.5">
+                {g.options.map((o) => (
+                  <button type="button" class="chip" aria-pressed="false" data-value={o}>{o}</button>
+                ))}
+              </div>
+            </div>
+          ))}
+          <div class="pt-4" style="border-top:2px solid var(--color-divider)">
+            <p class="muted text-label leading-[1.5]">
+              Candidates are listed alphabetically by last name in every race, always.
+            </p>
+          </div>
+        </div>
       </aside>
 
-      <div class="min-w-0 flex-[999_1_440px] py-7 pl-[clamp(0px,3vw,32px)]">
+      <div class="min-w-0 flex-[999_1_440px]" style="padding:28px 0 40px clamp(16px,3vw,32px)">
         <div class="relative flex items-center">
           <Icon
             name="lucide:search"
@@ -92,31 +119,28 @@ const filterGroups = [
             type="search" id="q"
             aria-label="Search races and candidates"
             placeholder="Search a name, an office, a district…"
-            class="w-full border-2 border-ink bg-transparent py-2 pl-[42px] pr-3.5 text-[16px]"
-            style="min-height:48px"
+            class="search-field w-full border-2 bg-transparent py-2 pl-[42px] pr-3.5 text-[16px]"
+            style="min-height:48px;border-color:var(--color-accent)"
           />
         </div>
 
-        <div class="flex items-baseline justify-between gap-4 border-b-2 border-divider py-4">
-          <span id="result-line" class="text-meta text-neutral-700">Showing all {entries.length} races</span>
-          <span class="text-meta text-neutral-700">Verified {formatShort(meta.lastVerified)}</span>
+        <div
+          class="flex items-baseline justify-between gap-4"
+          style="padding:14px 0 16px;border-bottom:2px solid var(--color-divider)"
+        >
+          <span id="result-line" role="status" aria-live="polite" class="muted text-meta">Showing all {entries.length} races</span>
+          <span class="muted text-label tracking-[0.01em]">Verified {formatShort(meta.lastVerified)}</span>
         </div>
 
-        <!-- Every race is rendered server-side and filtered by hiding, so the
-             full list is indexable and works with JS off. Do not build this
-             list from JS. -->
         {byLevel.map((g) => (
           <section data-level-group={g.level}>
-            <h2 class="mt-9 border-b-2 border-divider pb-2.5 text-meta font-semibold text-accent-700">{g.level}</h2>
-            <div class="divide-y-2 divide-divider">
+            <h2 class="mt-8 pb-2.5 text-label tracking-[0.01em] text-accent-700">{g.level}</h2>
+            <div>
               {g.races.map((race) => <RaceCard race={race} />)}
             </div>
           </section>
         ))}
 
-        <!-- Empty state. When the query names an off-cycle office, answer it
-             directly and suppress the generic line — see derive.offCycleAnswer.
-             Populated client-side from the JSON below. -->
         <div id="empty" hidden class="py-12">
           <p id="empty-specific" hidden class="max-w-[46ch]">
             <strong id="empty-heading" class="block text-section"></strong>
@@ -129,44 +153,47 @@ const filterGroups = [
   </div>
 
   <script
+    is:inline
     type="application/json"
     id="off-cycle"
-    set:html={JSON.stringify(meta.notUpThisCycle)}
+    set:html={jsonIsland({ ...meta.notUpThisCycle, cycle: meta.cycle })}
   />
 
   <script>
-    /* Filtering is a class toggle over pre-rendered cards. At 52 races and
-       135 candidates this is instant; no debounce, no framework, no fetch. */
-    const q = document.getElementById('q');
-    const cards = [...document.querySelectorAll('[data-race]')];
-    const groups = [...document.querySelectorAll('[data-filter-group]')];
+    import { deadlineState } from '../lib/clock';
+    import { offCycleAnswer, type OffCycle } from '../lib/search';
+
+    const primaryEl = document.getElementById('primary-status');
+    const primaryDate = primaryEl?.getAttribute('data-date');
+    if (primaryEl && primaryDate) primaryEl.textContent = deadlineState(primaryDate).label;
+
+    const q = document.getElementById('q') as HTMLInputElement | null;
+    const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-race]'));
+    const groups = Array.from(document.querySelectorAll<HTMLElement>('[data-filter-group]'));
     const resultLine = document.getElementById('result-line');
     const clearBtn = document.getElementById('clear-filters');
     const empty = document.getElementById('empty');
-    const offCycle = JSON.parse(document.getElementById('off-cycle').textContent);
+    const offCycle = JSON.parse(
+      document.getElementById('off-cycle')?.textContent || '{"offices":[],"note":"","cycle":""}',
+    ) as OffCycle;
 
-    const active = {};
-    groups.forEach((g) => (active[g.dataset.filterGroup] = new Set()));
+    const active = new Map<string, Set<string>>();
+    groups.forEach((g) => active.set(g.getAttribute('data-filter-group') || '', new Set()));
 
-    function matches(card) {
-      const needle = q.value.trim().toLowerCase();
-      if (needle && !card.dataset.search.includes(needle)) return false;
-      for (const [id, set] of Object.entries(active)) {
-        if (!set.size) continue;                      // AND across groups
+    const query = () => (q?.value || '').trim();
+
+    function matches(card: HTMLElement): boolean {
+      const needle = query().toLowerCase();
+      if (needle && !(card.getAttribute('data-search') || '').includes(needle)) return false;
+      for (const [id, set] of active) {
+        if (!set.size) continue;
         const field =
-          id === 'county' ? (card.dataset.counties || '').split('|')
-          : id === 'level' ? [card.dataset.level]
-          : (card.dataset.parties || '').split('|');
-        if (![...set].some((v) => field.includes(v))) return false;  // OR within
+          id === 'county' ? (card.getAttribute('data-counties') || '').split('|')
+          : id === 'level' ? [card.getAttribute('data-level') || '']
+          : (card.getAttribute('data-parties') || '').split('|');
+        if (![...set].some((v) => field.includes(v))) return false;
       }
       return true;
-    }
-
-    function offCycleAnswer(needle) {
-      if (needle.length < 3) return null;
-      return offCycle.offices.find(
-        (o) => o.toLowerCase().includes(needle) || needle.includes(o.toLowerCase().split(' (')[0]),
-      );
     }
 
     function apply() {
@@ -177,42 +204,50 @@ const filterGroups = [
         if (ok) shown++;
       });
 
-      // Hide a level heading whose races are all filtered out.
-      document.querySelectorAll('[data-level-group]').forEach((s) => {
-        s.hidden = ![...s.querySelectorAll('[data-race]')].some((c) => !c.hidden);
+      document.querySelectorAll<HTMLElement>('[data-level-group]').forEach((s) => {
+        s.hidden = !Array.from(s.querySelectorAll<HTMLElement>('[data-race]')).some((c) => !c.hidden);
       });
 
-      const anyFilter = Object.values(active).some((s) => s.size) || q.value.trim();
-      clearBtn.hidden = !anyFilter;
-      resultLine.textContent = shown === cards.length
-        ? `Showing all ${cards.length} races`
-        : `Showing ${shown} of ${cards.length} races`;
+      const anyFilter = [...active.values()].some((s) => s.size) || !!query();
+      if (clearBtn) clearBtn.hidden = !anyFilter;
+      if (resultLine) {
+        resultLine.textContent = shown === cards.length
+          ? `Showing all ${cards.length} races`
+          : `Showing ${shown} of ${cards.length} races`;
+      }
 
-      empty.hidden = shown > 0;
+      if (empty) empty.hidden = shown > 0;
       if (!shown) {
-        const hit = offCycleAnswer(q.value.trim().toLowerCase());
-        document.getElementById('empty-specific').hidden = !hit;
-        document.getElementById('empty-generic').hidden = !!hit;   // never both
-        if (hit) {
-          document.getElementById('empty-heading').textContent = `${hit} has no 2026 election`;
-          document.getElementById('empty-note').textContent = offCycle.note;
+        const hit = offCycleAnswer(query(), offCycle);
+        const specific = document.getElementById('empty-specific');
+        const generic = document.getElementById('empty-generic');
+        if (specific) specific.hidden = !hit;
+        if (generic) generic.hidden = !!hit;
+        const heading = document.getElementById('empty-heading');
+        const note = document.getElementById('empty-note');
+        if (hit && heading && note) {
+          heading.textContent = hit.heading;
+          note.textContent = hit.note;
         }
       }
     }
 
-    q.addEventListener('input', apply);
+    q?.addEventListener('input', apply);
     groups.forEach((g) => g.addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip');
+      const btn = (e.target as HTMLElement).closest<HTMLElement>('.chip');
       if (!btn) return;
-      const set = active[g.dataset.filterGroup];
+      const set = active.get(g.getAttribute('data-filter-group') || '');
+      if (!set) return;
       const on = btn.getAttribute('aria-pressed') === 'true';
       btn.setAttribute('aria-pressed', String(!on));
-      on ? set.delete(btn.dataset.value) : set.add(btn.dataset.value);
+      const value = btn.getAttribute('data-value') || '';
+      if (on) set.delete(value);
+      else set.add(value);
       apply();
     }));
-    clearBtn.addEventListener('click', () => {
-      q.value = '';
-      Object.values(active).forEach((s) => s.clear());
+    clearBtn?.addEventListener('click', () => {
+      if (q) q.value = '';
+      active.forEach((s) => s.clear());
       document.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
       apply();
     });
