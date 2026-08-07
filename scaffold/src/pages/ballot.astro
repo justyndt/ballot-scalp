@@ -1,0 +1,503 @@
+---
+import { getCollection } from 'astro:content';
+import { Icon } from 'astro-icon/components';
+import Base from '../layouts/Base.astro';
+import BallotRow from '../components/BallotRow.astro';
+import Dropdown from '../components/Dropdown.astro';
+import { meta, regions } from '../lib/meta';
+import { LEVELS } from '../content.config';
+import { jsonIsland } from '../lib/embed';
+import {
+  activeCandidates, seatParts, fieldLabel, electionLabel, partyAbbr, formatDate,
+} from '../lib/derive';
+
+const entries = await getCollection('races');
+
+const GEO_SEAT = /^District (\d+)$/;
+const geoDistrict = (seat: string) => GEO_SEAT.exec(seat)?.[1] ?? null;
+
+function cityOf(office: string): string | null {
+  return office.match(/^(.+?)\s+(?:City Commissioner|City Council|Town Council|City Commission|Mayor)$/)?.[1] ?? null;
+}
+
+const isAddressDependent = (level: string, office: string) =>
+  level === 'State' || /Community Development District/.test(office);
+
+const shaped = entries.map((e) => {
+  const r = e.data;
+  return {
+    entry: e,
+    counties: r.counties,
+    level: r.level,
+    ccd: r.level === 'County' ? geoDistrict(r.seat) : null,
+    sbd: r.level === 'School board' ? geoDistrict(r.seat) : null,
+    city: r.level === 'Municipal' ? cityOf(r.office) : null,
+    addressDependent: isAddressDependent(r.level, r.office),
+  };
+});
+
+const districtsFor = (county: string, key: 'ccd' | 'sbd') =>
+  [...new Set(shaped.filter((s) => s.counties.includes(county) && s[key]).map((s) => s[key] as string))]
+    .sort((a, b) => Number(a) - Number(b));
+
+const citiesFor = (county: string) =>
+  [...new Set(shaped.filter((s) => s.counties.includes(county) && s.city).map((s) => s.city as string))].sort();
+
+const picker = regions.map((r) => ({
+  id: r.id,
+  name: r.name,
+  lookupUrl: r.lookupUrl,
+  ccd: districtsFor(r.id, 'ccd'),
+  sbd: districtsFor(r.id, 'sbd'),
+  cities: citiesFor(r.id),
+}));
+
+const byLevel = LEVELS
+  .map((level) => ({ level, races: shaped.filter((s) => s.level === level) }))
+  .filter((g) => g.races.length);
+---
+<Base title="Build your ballot" description={meta.ballotIntro}>
+  <div class="shell">
+    <header class="pb-8 pt-14" style="border-bottom:2px solid var(--color-divider)">
+      <h1 class="mb-3.5 max-w-[18ch] text-title">Build your ballot</h1>
+      <p class="max-w-[58ch] text-intro">{meta.ballotIntro}</p>
+    </header>
+
+    <div class="flex flex-wrap">
+      <aside
+        class="min-w-0 flex-[1_1_280px]"
+        style="border-right:2px solid var(--color-divider);padding:28px 32px 40px 0"
+        aria-label="Where you vote"
+      >
+        <div class="sticky flex flex-col gap-[22px]" style="top:96px">
+        <div class="flex items-baseline justify-between gap-3">
+          <h2 class="text-label font-normal tracking-[0.01em]">Where you vote</h2>
+          <button
+            type="button"
+            id="ballot-reset"
+            hidden
+            class="cursor-pointer border-0 bg-transparent p-0 text-label font-semibold text-accent-700 underline"
+            style="text-underline-offset:3px"
+          >Start over</button>
+        </div>
+
+        <div class="flex flex-col gap-[22px]">
+          <Dropdown
+            id="county"
+            label="County"
+            placeholder="Choose your county"
+            options={picker.map((p) => ({ value: p.id, label: p.name }))}
+          />
+
+          <Dropdown id="ccd" label="County commission district" placeholder="Choose your county first" options={[]} disabled />
+          <Dropdown id="sbd" label="School board district" placeholder="Choose your county first" options={[]} disabled />
+          <Dropdown id="city" label="City or town" placeholder="Choose your county first" options={[]} disabled />
+        </div>
+
+        <div class="pt-4" style="border-top:2px solid var(--color-divider)">
+          <p class="muted mb-3 text-label leading-[1.55]">{meta.lookupNote}</p>
+          <p id="lookup-wrap" hidden>
+            <a id="lookup-link" href="#" target="_blank" rel="noopener" class="text-meta font-semibold">
+              Look up my districts<span class="whitespace-nowrap"><Icon name="lucide:arrow-up-right" width={13} height={13} class="out-arrow" /></span>
+            </a>
+          </p>
+        </div>
+        </div>
+      </aside>
+
+      <div class="min-w-0 flex-[999_1_420px]" style="padding:28px 0 40px clamp(16px,3vw,40px)">
+        <div
+          class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 pb-3.5"
+          style="border-bottom:2px solid var(--color-divider)"
+        >
+          <h2 class="text-label font-normal tracking-[0.01em]">Your ballot</h2>
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <span class="muted text-meta" id="ballot-count">Choose your county to begin</span>
+            <!-- Disabled until there is a ballot to export; enabling it
+                 sooner would hand someone an empty image. -->
+            <button type="button" class="btn btn-secondary" id="ballot-export-btn" disabled>
+              <Icon name="lucide:download" width={15} height={15} />
+              <span id="ballot-export-label">Download as image</span>
+            </button>
+          </div>
+        </div>
+
+        {byLevel.map((g) => (
+          <section data-level-group={g.level}>
+            <h3 class="pb-2.5 text-label tracking-[0.01em] text-accent-700" style="margin-top:28px">{g.level}</h3>
+
+            <div>
+              {g.races.map((s) => (
+                <div
+                  data-ballot-race
+                  data-counties={s.counties.join('|')}
+                  data-level={s.level}
+                  data-ccd={s.ccd ?? ''}
+                  data-sbd={s.sbd ?? ''}
+                  data-city={s.city ?? ''}
+                  data-address-dependent={s.addressDependent ? '1' : ''}
+                >
+                  <BallotRow race={s.entry} />
+                  {s.addressDependent && (
+                    <p class="muted mb-3 text-label" style="padding:4px 9px;border:1px solid var(--color-divider);display:inline-block">
+                      Depends on your street address — check with your Supervisor of Elections
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <p id="ballot-empty" hidden class="mt-9 border-t-2 border-divider pt-6 text-dense">
+          Nothing matches that combination yet. Check the districts on your voter information card,
+          or clear a filter above.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline type="application/json" id="ballot-picker" set:html={jsonIsland(picker)}></script>
+
+  <!-- Everything the exported image needs, computed server-side so the
+       record's own wording travels into the PNG unchanged. Keyed by race id;
+       the script picks out whichever rows are currently visible. -->
+  <script
+    is:inline
+    type="application/json"
+    id="ballot-export"
+    set:html={jsonIsland({
+      siteName: meta.name,
+      scope: meta.scope,
+      verified: `Record verified ${formatDate(meta.lastVerified)}`,
+      disclaimer: 'This is not an official ballot.',
+      choicesNote: 'The choices shown are the reader\u2019s own, made on this page. They are not a recommendation by ' + meta.name + ', which endorses no candidate.',
+      sourceLine: `${meta.name} is an independent record, not a government website. Confirm every race with your Supervisor of Elections before you vote.`,
+      races: Object.fromEntries(entries.map((e) => {
+        const r = e.data;
+        const seat = seatParts(r.seat);
+        return [e.id, {
+          office: r.office,
+          seat: seat.has ? seat.text : '',
+          level: r.level,
+          field: fieldLabel(r),
+          election: electionLabel(r),
+          addressDependent: isAddressDependent(r.level, r.office),
+          /* Keyed by candidate id so a mark can be resolved to a name and
+             party without shipping the roster twice. */
+          candidates: Object.fromEntries(activeCandidates(r).map((c) => [
+            c.id, { name: c.name, party: partyAbbr(c.party) },
+          ])),
+        }];
+      })),
+    })}
+  ></script>
+</Base>
+
+<script>
+  import { initDropdowns } from '../lib/dropdown';
+  import { renderBallot, downloadCanvas } from '../lib/ballot-image';
+  import type { ExportRace } from '../lib/ballot-image';
+
+  interface Region {
+    id: string; name: string; lookupUrl: string;
+    ccd: string[]; sbd: string[]; cities: string[];
+  }
+
+  /* Importing the module guarantees the dropdowns are wired before any
+     dd:setoptions below reaches them. */
+  initDropdowns();
+
+  const KEY = 'ballot-scalp:ballot';
+  /* Separate key from the geography: clearing where you vote should not
+     silently discard who you chose, and vice versa. */
+  const PICKS_KEY = 'ballot-scalp:picks';
+  const dataEl = document.getElementById('ballot-picker');
+
+  if (dataEl) {
+    const picker: Region[] = JSON.parse(dataEl.textContent || '[]');
+    const byId = new Map(picker.map((p) => [p.id, p]));
+
+    const dd = (id: string) => document.querySelector<HTMLElement>(`[data-dd="${id}"]`);
+    const county = dd('county'), ccd = dd('ccd'), sbd = dd('sbd'), city = dd('city');
+    const valueOf = (el: HTMLElement | null) => el?.getAttribute('data-value') || '';
+    const setOptions = (
+      el: HTMLElement | null,
+      options: { value: string; label: string }[],
+      value: string,
+      placeholder: string,
+    ) => el?.dispatchEvent(new CustomEvent('dd:setoptions', { detail: { options, value, placeholder } }));
+    const reset = document.getElementById('ballot-reset');
+    const count = document.getElementById('ballot-count');
+    const exportBtn = document.getElementById('ballot-export-btn') as HTMLButtonElement | null;
+    const exportLabel = document.getElementById('ballot-export-label');
+    const empty = document.getElementById('ballot-empty');
+    const lookupWrap = document.getElementById('lookup-wrap');
+    const lookupLink = document.getElementById('lookup-link') as HTMLAnchorElement | null;
+    const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-ballot-race]'));
+
+    type State = { county: string; ccd: string; sbd: string; city: string };
+    const blank: State = { county: '', ccd: '', sbd: '', city: '' };
+
+    function load(): State {
+      try {
+        const raw = localStorage.getItem(KEY);
+        if (!raw) return { ...blank };
+        const p = JSON.parse(raw) as Partial<State>;
+        return {
+          county: typeof p.county === 'string' ? p.county : '',
+          ccd: typeof p.ccd === 'string' ? p.ccd : '',
+          sbd: typeof p.sbd === 'string' ? p.sbd : '',
+          city: typeof p.city === 'string' ? p.city : '',
+        };
+      } catch {
+        return { ...blank };
+      }
+    }
+
+    function save(s: State) {
+      try {
+        if (!s.county && !s.ccd && !s.sbd && !s.city) localStorage.removeItem(KEY);
+        else localStorage.setItem(KEY, JSON.stringify(s));
+      } catch {
+  }
+    }
+
+    let state = load();
+    let marked = 0, totalVisible = 0;
+
+    const asOptions = (values: string[], fmt = (v: string) => v) =>
+      values.map((v) => ({ value: v, label: fmt(v) }));
+
+    function matches(card: HTMLElement): boolean {
+      const counties = (card.getAttribute('data-counties') || '').split('|');
+      if (!state.county || !counties.includes(state.county)) return false;
+
+      const cardCcd = card.getAttribute('data-ccd') || '';
+      if (state.ccd && cardCcd && cardCcd !== state.ccd) return false;
+
+      const cardSbd = card.getAttribute('data-sbd') || '';
+      if (state.sbd && cardSbd && cardSbd !== state.sbd) return false;
+
+      const cardCity = card.getAttribute('data-city') || '';
+      if (cardCity) return state.city === cardCity;
+
+      return true;
+    }
+
+    function apply() {
+      const region = state.county ? byId.get(state.county) : undefined;
+
+      const waiting = 'Choose your county first';
+      setOptions(ccd, region ? asOptions(region.ccd, (v) => `District ${v}`) : [], state.ccd, region ? 'All districts' : waiting);
+      setOptions(sbd, region ? asOptions(region.sbd, (v) => `District ${v}`) : [], state.sbd, region ? 'All districts' : waiting);
+      setOptions(city, region ? asOptions(region.cities) : [], state.city, region ? 'None or unincorporated' : waiting);
+
+      state.ccd = valueOf(ccd);
+      state.sbd = valueOf(sbd);
+      state.city = valueOf(city);
+
+      let shown = 0, unsure = 0;
+      cards.forEach((c) => {
+        const on = matches(c);
+        c.hidden = !on;
+        if (on) {
+          shown++;
+          if (c.getAttribute('data-address-dependent')) unsure++;
+        }
+      });
+
+      document.querySelectorAll<HTMLElement>('[data-level-group]').forEach((g) => {
+        g.hidden = !Array.from(g.querySelectorAll<HTMLElement>('[data-ballot-race]')).some((c) => !c.hidden);
+      });
+
+      /* How much of the visible ballot is marked — the same number the
+         image prints, so page and export can never disagree. */
+      const visibleIds = Array.from(document.querySelectorAll<HTMLElement>('[data-race-pick]'))
+        .filter((row) => !(row.closest('[data-ballot-race]') as HTMLElement | null)?.hidden)
+        .map((row) => row.getAttribute('data-race-pick') || '');
+      marked = visibleIds.filter((id) => picks[id]).length;
+      totalVisible = visibleIds.length;
+
+      if (count) {
+        count.textContent = !state.county
+          ? 'Choose your county to begin'
+          : `${shown} ${shown === 1 ? 'race' : 'races'} · ${marked} marked` +
+            (unsure ? ` · ${unsure} depend${unsure === 1 ? 's' : ''} on your address` : '');
+      }
+      if (empty) empty.hidden = !(state.county && shown === 0);
+      if (reset) reset.hidden = !(state.county || state.ccd || state.sbd || state.city);
+      if (lookupWrap) lookupWrap.hidden = !region;
+      if (lookupLink && region) lookupLink.href = region.lookupUrl;
+      if (exportBtn) exportBtn.disabled = shown === 0;
+
+      save(state);
+    }
+
+    /* ── Export ───────────────────────────────────────────────────────────
+       The image is built from whatever is on screen: the same visible rows,
+       in the same order, so the download can never disagree with the page
+       that produced it. */
+    const exportEl = document.getElementById('ballot-export');
+    const exportData = exportEl ? JSON.parse(exportEl.textContent || '{}') : null;
+
+    /* ── Your marks ───────────────────────────────────────────────────────
+       One candidate per race, kept as { raceId: candidateId }. The radios
+       enforce one-per-race in the browser; this only persists the result. */
+    type Picks = Record<string, string>;
+
+    function loadPicks(): Picks {
+      try {
+        const raw = localStorage.getItem(PICKS_KEY);
+        const p = raw ? JSON.parse(raw) : null;
+        if (!p || typeof p !== 'object' || Array.isArray(p)) return {};
+        const out: Picks = {};
+        for (const [k, v] of Object.entries(p)) if (typeof v === 'string' && v) out[k] = v;
+        return out;
+      } catch { return {}; }
+    }
+    function savePicks(p: Picks) {
+      try {
+        if (!Object.keys(p).length) localStorage.removeItem(PICKS_KEY);
+        else localStorage.setItem(PICKS_KEY, JSON.stringify(p));
+      } catch { /* private mode */ }
+    }
+
+    let picks = loadPicks();
+
+    /* Restore marks into the radios, dropping any id the data no longer
+       has — a candidate who withdraws should not leave a ghost mark. */
+    function paintPicks() {
+      document.querySelectorAll<HTMLElement>('[data-race-pick]').forEach((row) => {
+        const raceId = row.getAttribute('data-race-pick') || '';
+        const chosen = picks[raceId];
+        let found = false;
+        row.querySelectorAll<HTMLInputElement>('input[data-pick]').forEach((input) => {
+          const on = input.value === chosen;
+          input.checked = on;
+          if (on) found = true;
+        });
+        if (chosen && !found) delete picks[raceId];
+        const clear = row.querySelector<HTMLElement>('[data-pick-clear]');
+        if (clear) clear.hidden = !found;
+      });
+    }
+
+    document.addEventListener('change', (e) => {
+      const input = e.target as HTMLInputElement;
+      if (!input?.matches?.('input[data-pick]')) return;
+      const row = input.closest<HTMLElement>('[data-race-pick]');
+      if (!row) return;
+      picks[row.getAttribute('data-race-pick') || ''] = input.value;
+      savePicks(picks);
+      paintPicks();
+      apply();
+    });
+
+    document.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-pick-clear]');
+      if (!btn) return;
+      delete picks[btn.getAttribute('data-pick-clear') || ''];
+      savePicks(picks);
+      paintPicks();
+      apply();
+    });
+
+    function selectionLines(): string[] {
+      const region = state.county ? byId.get(state.county) : undefined;
+      const out = [region ? region.name : ''];
+      if (state.ccd) out.push(`Commission district ${state.ccd}`);
+      if (state.sbd) out.push(`School board district ${state.sbd}`);
+      out.push(state.city ? state.city : 'No city or town');
+      return out.filter(Boolean);
+    }
+
+    async function exportImage() {
+      if (!exportData || !exportBtn) return;
+      const was = exportLabel?.textContent ?? 'Download as image';
+      exportBtn.disabled = true;
+      if (exportLabel) exportLabel.textContent = 'Building image…';
+      try {
+        /* Walk the level groups in document order so the image is grouped
+           exactly as the page is. */
+        const groups = Array.from(document.querySelectorAll<HTMLElement>('[data-level-group]'))
+          .filter((g) => !g.hidden)
+          .map((g) => ({
+            level: g.getAttribute('data-level-group') || '',
+            races: Array.from(g.querySelectorAll<HTMLElement>('[data-ballot-race]'))
+              .filter((c) => !c.hidden)
+              .map((c) => {
+                const id = c.querySelector('[data-race-pick]')?.getAttribute('data-race-pick') || '';
+                const r = exportData.races[id];
+                if (!r) return undefined;
+                /* Resolve this reader's mark to a name and party. An id the
+                   data no longer holds prints as no choice, never as a
+                   blank line pretending to be one. */
+                const chosen = picks[id] ? r.candidates[picks[id]] ?? null : null;
+                return { ...r, chosen } as ExportRace;
+              })
+              .filter(Boolean) as ExportRace[],
+          }))
+          .filter((g) => g.races.length);
+
+        const canvas = await renderBallot({
+          siteName: exportData.siteName,
+          scope: exportData.scope,
+          selections: selectionLines(),
+          groups,
+          progress: `${marked} of ${totalVisible} ${totalVisible === 1 ? 'race' : 'races'} marked`,
+          verified: exportData.verified,
+          disclaimer: exportData.disclaimer,
+          choicesNote: exportData.choicesNote,
+          sourceLine: exportData.sourceLine,
+        });
+
+        const slug = [state.county, state.ccd && `cc${state.ccd}`, state.sbd && `sb${state.sbd}`, state.city]
+          .filter(Boolean).join('-').toLowerCase().replace(/[^a-z0-9-]+/g, '-');
+        await downloadCanvas(canvas, `ballot-${slug}.png`);
+      } catch (err) {
+        /* A failed export must say so rather than look like a dead button. */
+        if (exportLabel) exportLabel.textContent = 'Could not build image';
+        setTimeout(() => { if (exportLabel) exportLabel.textContent = was; }, 2500);
+        console.error(err);
+        return;
+      } finally {
+        exportBtn.disabled = false;
+      }
+      if (exportLabel) exportLabel.textContent = was;
+    }
+
+    exportBtn?.addEventListener('click', exportImage);
+
+    county?.addEventListener('dd:change', (e) => {
+
+      state = { county: (e as CustomEvent).detail.value, ccd: '', sbd: '', city: '' };
+      apply();
+    });
+    ccd?.addEventListener('dd:change', (e) => { state.ccd = (e as CustomEvent).detail.value; apply(); });
+    sbd?.addEventListener('dd:change', (e) => { state.sbd = (e as CustomEvent).detail.value; apply(); });
+    city?.addEventListener('dd:change', (e) => { state.city = (e as CustomEvent).detail.value; apply(); });
+
+    reset?.addEventListener('click', () => {
+      state = { ...blank };
+      setOptions(county, picker.map((p) => ({ value: p.id, label: p.name })), '', 'Choose your county');
+
+      try { localStorage.removeItem(KEY); } catch { /* private mode */ }
+      /* "Start over" means the whole ballot, marks included. */
+      picks = {};
+      savePicks(picks);
+      paintPicks();
+      apply();
+    });
+
+    setOptions(
+      county,
+      picker.map((p) => ({ value: p.id, label: p.name })),
+      byId.has(state.county) ? state.county : '',
+      'Choose your county',
+    );
+    state.county = valueOf(county);
+    paintPicks();
+    apply();
+  }
+</script>

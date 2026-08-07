@@ -1,0 +1,101 @@
+---
+import { Icon } from 'astro-icon/components';
+
+export interface Option { value: string; label: string }
+
+interface Props {
+  id: string;
+  label: string;
+  placeholder: string;
+  options: Option[];
+  value?: string;
+  searchable?: boolean;
+  searchPlaceholder?: string;
+  noMatchText?: string;
+  disabled?: boolean;
+
+  showLabel?: boolean;
+}
+
+const {
+  id, label, placeholder, options, value = '',
+  searchable = false, searchPlaceholder = 'Search…',
+  noMatchText = 'Nothing matches that.', disabled = false, showLabel = true,
+} = Astro.props;
+
+const selected = options.find((o) => o.value === value);
+---
+<div class="dd" data-dd={id} data-value={value}>
+  {showLabel && (
+    <label class="muted mb-[7px] block text-micro" for={`dd-trigger-${id}`}>{label}</label>
+  )}
+
+  <div class="dd-custom relative">
+    <button
+      type="button"
+      class="dd-trigger"
+      id={`dd-trigger-${id}`}
+      data-dd-trigger
+      aria-haspopup="listbox"
+      aria-expanded="false"
+      aria-label={label}
+      disabled={disabled}
+    >
+      <span data-dd-label>{selected ? selected.label : placeholder}</span>
+
+      <span data-dd-chev-down class="flex-none"><Icon name="lucide:chevron-down" width={18} height={18} style="color:var(--color-accent-700)" /></span>
+      <span data-dd-chev-up hidden class="flex-none"><Icon name="lucide:chevron-up" width={18} height={18} style="color:var(--color-accent-700)" /></span>
+    </button>
+
+    <div class="dd-panel" data-dd-panel hidden>
+      {searchable && (
+        <div class="dd-search-row">
+          <Icon
+            name="lucide:search"
+            width={16}
+            height={16}
+            class="flex-none"
+            style="color:color-mix(in srgb, var(--color-ink) 60%, transparent)"
+          />
+          <input
+            type="text"
+            class="dd-search"
+            data-dd-search
+            placeholder={searchPlaceholder}
+            aria-label={`Search ${label}`}
+          />
+        </div>
+      )}
+      <div class="dd-list" role="listbox" data-dd-list tabindex="-1" aria-label={label}>
+        {options.map((o) => (
+          <button
+            type="button"
+            class="dd-option"
+            role="option"
+            aria-selected={o.value === value ? 'true' : 'false'}
+            data-dd-option={o.value}
+            data-dd-text={o.label.toLowerCase()}
+          >
+            <span>{o.label}</span>
+            <span data-dd-check hidden class="flex-none">
+              <Icon name="lucide:check" width={16} height={16} style="color:var(--color-accent-700)" />
+            </span>
+          </button>
+        ))}
+      </div>
+      <div class="muted hidden" data-dd-nomatch style="padding:16px 12px;font-size:13px">{noMatchText}</div>
+    </div>
+  </div>
+
+  <select class="dd-native w-full border-2 border-ink bg-transparent px-3 text-[15px]" style="min-height:44px;padding-right:36px" data-dd-native aria-label={label} disabled={disabled}>
+    <option value="">{placeholder}</option>
+    {options.map((o) => <option value={o.value} selected={o.value === value}>{o.label}</option>)}
+  </select>
+</div>
+
+<script>
+  /* Behaviour lives in the module so the import graph fixes the ordering —
+     see the note at the top of lib/dropdown.ts. */
+  import { initDropdowns } from '../lib/dropdown';
+  initDropdowns();
+</script>
