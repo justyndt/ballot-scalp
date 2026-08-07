@@ -1,6 +1,8 @@
 # TASK
 
 ## Current
+- [x] 2026-08-07: Race page — seat holder aside first on mobile via flex order
+- [x] 2026-08-07: Convert index filter rail styles to Tailwind; hide border-right on mobile
 - [x] 2026-08-07: Update Leon candidates from `data/2026 General Election Candidate List.csv` as source of truth
 - [x] 2026-08-07: Remove heavy commenting from `scaffold/src/pages/index.astro`
 - [x] 2026-08-07: Move Incumbent off the tag row onto a micro eyebrow above the candidate name
