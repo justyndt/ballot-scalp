@@ -293,15 +293,13 @@ Nothing else is renamed. If `/race/us-senate` 404s, this is why.
 
 ## Deploy (Vercel)
 
-The Astro app lives in **`scaffold/`**, not the repo root. In the Vercel project:
+The Astro app lives in **`scaffold/`**. Root `vercel.json` installs and builds there (`npm … --prefix scaffold`, output `scaffold/dist`), so the project Root Directory can stay `.`.
 
-1. **Root Directory** → `scaffold`
-2. Framework: **Astro** (or Other)
-3. Build Command: `npm run build`
-4. Output Directory: `dist`
-5. Install Command: `npm install`
+If you override settings in the Vercel UI, use either:
+- Root Directory `scaffold`, build `npm run build`, output `dist`, or
+- Root Directory `.` and leave build/output to `vercel.json`
 
-Redeploy after saving. A root-level deploy with no Root Directory set produces Vercel’s `404: NOT_FOUND` because there is nothing to build at `/`.
+A deploy that finishes in ~50ms with no `npm install` / `astro build` is wrong — redeploy from a commit that includes `vercel.json`.
 
 ## Suggested order
 
