@@ -291,6 +291,18 @@ rm src/pages/.gitkeep
 
 Nothing else is renamed. If `/race/us-senate` 404s, this is why.
 
+## Deploy (Vercel)
+
+The Astro app lives in **`scaffold/`**, not the repo root. In the Vercel project:
+
+1. **Root Directory** → `scaffold`
+2. Framework: **Astro** (or Other)
+3. Build Command: `npm run build`
+4. Output Directory: `dist`
+5. Install Command: `npm install`
+
+Redeploy after saving. A root-level deploy with no Root Directory set produces Vercel’s `404: NOT_FOUND` because there is nothing to build at `/`.
+
 ## Suggested order
 
 1. `npm install`, confirm the dev server boots and `astro check` passes against the schema. **If the schema fails, the data changed — fix the schema, not the data.**
