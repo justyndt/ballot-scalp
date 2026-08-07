@@ -100,7 +100,7 @@ const heldByParty = r.heldBy.party
     </div>
 
     <div class="flex flex-wrap items-start gap-x-12 gap-y-8 pb-16 pt-7">
-      <div class="min-w-0 flex-[999_1_420px]">
+      <div class="order-2 min-w-0 flex-[999_1_420px] md:order-1">
         <div class="mb-8 bg-accent-100 px-5 py-4" style="border-left:3px solid var(--color-accent)">
           <div class="mb-1.5 text-micro text-accent-700">How this seat is decided</div>
           <p class="text-dense text-accent-900">{r.ballotNote}</p>
@@ -153,7 +153,7 @@ const heldByParty = r.heldBy.party
         )}
       </div>
 
-      <aside class="flex-[1_1_300px] p-[22px]" style="border:2px solid var(--color-ink)">
+      <aside class="order-1 flex-[1_1_300px] p-[22px] md:order-2" style="border:2px solid var(--color-ink)">
         <div class="muted mb-2.5 text-micro">Currently holds this seat</div>
         <div class="mb-2 font-heading text-[24px] font-extrabold leading-[1.1] tracking-[-0.02em]">
           {orElse(r.heldBy.name, NOT_PUBLISHED)}
