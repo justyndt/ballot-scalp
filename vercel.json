@@ -1,0 +1,6 @@
+{
+  "framework": "astro",
+  "installCommand": "npm install --prefix scaffold",
+  "buildCommand": "npm run build --prefix scaffold",
+  "outputDirectory": "scaffold/dist"
+}
